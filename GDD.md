@@ -132,28 +132,27 @@ Este projeto utiliza uma esteira moderna de desenvolvimento assistida por IA via
 - [x] Movimentação do jogador em WASD/Setas com colisão e rotação suave.
 - [x] Câmera isométrica em terceira pessoa.
 
-### Fase 2: Assets 3D via Blender MCP (🔄 Em Progresso)
+### Fase 2: Assets 3D via Blender MCP (✅ Concluído)
 - [x] Modelagem da **Palmeira Tropical** no Blender e exportação FBX.
 - [x] Modelagem da **Moeda Dourada** estilizada no Blender e exportação FBX.
-- [ ] Modelagem do **Baú do Tesouro** (base + tampa separada para animar).
-- [ ] Modelagem de pedras e detalhes decorativos para a praia.
-- [ ] Modelagem do avatar do jogador (substituir a cápsula).
+- [x] Modelagem do **Baú do Tesouro** (base + tampa separada com pivô articulado e tesouro de ouro interno).
+- [x] Modelagem de **Pedras Decorativas** estilizadas para a praia e exportação FBX.
+- [ ] Modelagem do avatar do jogador (substituir a cápsula - opcional/polimento).
 
-### Fase 3: Ciclo Completo de Gameplay (Próximo Passo)
-- [x] Sistema de coleta e contagem de moedas no placar.
-- [ ] Adicionar o **Baú do Tesouro** na cena (posição nobre na ilha).
-- [ ] Programar a animação de abertura da tampa do baú.
-- [ ] Vincular a vitória: coletar 6 moedas -> disparar abertura do baú.
-- [ ] Tela de Vitória ("Fim de Jogo") na interface.
+### Fase 3: Ciclo Completo de Gameplay (✅ Concluído)
+- [x] Sistema de coleta e contagem de moedas no placar (`🪙 Moedas: X / 6`).
+- [x] Adicionar o **Baú do Tesouro** na cena (posição de destaque no topo da ilha).
+- [x] Programar a animação procedural suave de abertura da tampa do baú (`TreasureChest.cs`).
+- [x] Vincular a vitória: coletar 6 moedas -> destrancar e abrir o baú com luz dourada.
+- [x] Tela de Vitória estilizada ("Parabéns! Você descobriu o Segredo de Tiny Island!") com cronômetro e botão de reinício.
 
-### Fase 4: Polimento, Áudio & Sensação de Jogo (*Game Juice*)
+### Fase 4: Polimento, Áudio & Sensação de Jogo (*Game Juice*) (🔄 Em Andamento)
+- [x] Efeitos sonoros procedurais sintetizados em tempo real via C#:
+  * Som de coleta de moeda ("plim!" agradável com arpeggio).
+  * Fanfarra triunfante ao abrir o baú do tesouro.
+- [x] Iluminação comemorativa dourada (`TreasureGlowLight`) emanando do baú aberto.
 - [ ] Efeito de partículas de estrelas ao pegar uma moeda.
 - [ ] Efeito de partículas ao abrir o baú (fogos / confetes de vitória).
-- [ ] Efeitos sonoros:
-  * Passos leves na areia/grama.
-  * Som de coleta ("plim!").
-  * Som de vitória / fanfarra ao abrir o baú.
-  * Som ambiente de ondas do mar.
 - [ ] Ajuste de iluminação URP (sombra suave e clima ensolarado).
 
 ---
