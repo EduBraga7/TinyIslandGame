@@ -14,6 +14,15 @@
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="prints/menu.png" alt="Menu Inicial - Tiny Island Game" width="48%" />
+  <img src="prints/game.png" alt="Gameplay - Tiny Island Game" width="48%" />
+</p>
+
+---
+
 ## 📖 Sobre o Jogo
 
 **Tiny Island** é um protótipo de micro-aventura 3D desenvolvido no **Unity 6**, com modelos 3D autorais gerados proceduralmente no **Blender 5.2** através de uma esteira assistida por IA via **MCP (Model Context Protocol)**.
