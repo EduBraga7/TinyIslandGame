@@ -79,7 +79,8 @@ TinyIslandGame/
 │       ├── CollectibleItem.cs       # Animação e lógica de coleta
 │       ├── IslandGameManager.cs     # Gerenciamento de placar e UI
 │       └── PlayerController.cs      # Física e movimentação do personagem
-├── GDD.md                           # Documento de Game Design e Escopo do MVP
+├── GDD.md                           # Documento de Game Design de referência
+├── ROADMAP.md                       # Planos e melhorias futuras do projeto
 ├── README.md                        # Apresentação do repositório
 └── .gitignore                       # Filtros de arquivos de cache da Unity
 ```
@@ -102,4 +103,5 @@ TinyIslandGame/
 ---
 
 ## 📋 Documentação Completa
-Para ver a especificação completa de design, regras do jogo e o ciclo de vida do projeto, consulte o arquivo [GDD.md](./GDD.md).
+* **Design e Regras do Jogo:** Consulte o [GDD.md](./GDD.md) para ver a especificação completa da versão atual.
+* **Planos e Próximas Versões:** Consulte o [ROADMAP.md](./ROADMAP.md) para acompanhar as ideias e melhorias futuras planejadas.

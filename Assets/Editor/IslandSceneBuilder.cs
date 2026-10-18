@@ -402,8 +402,12 @@ public static class IslandSceneBuilder
             camFollow.target = playerObj.transform;
             camFollow.offset = new Vector3(0f, 6.2f, -5.5f);
             camFollow.smoothTime = 0.15f;
-            mainCam.transform.position = playerObj.transform.position + camFollow.offset;
-            mainCam.transform.LookAt(playerObj.transform.position + Vector3.up * 0.8f);
+            camFollow.mode = CameraFollow.CameraMode.MenuOrbit;
+            camFollow.orbitCenter = new Vector3(0f, 0.6f, 0f);
+            camFollow.orbitDistance = 18f;
+            camFollow.orbitHeight = 9.5f;
+            mainCam.transform.position = camFollow.CalculateOrbitPosition(camFollow.currentOrbitAngle);
+            mainCam.transform.LookAt(camFollow.orbitCenter + Vector3.up * 0.8f);
         }
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());

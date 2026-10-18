@@ -11,6 +11,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movimentação")]
+    [Tooltip("Define se o jogador pode se mover (bloqueado durante menus)")]
+    public bool canMove = true;
+
     [Tooltip("Velocidade com que o personagem anda")]
     public float moveSpeed = 6f;
 
@@ -69,7 +72,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        Vector2 input = GetMovementInput();
+        bool movementAllowed = canMove && (IslandGameManager.Instance == null || IslandGameManager.Instance.CanPlayerMove());
+        Vector2 input = movementAllowed ? GetMovementInput() : Vector2.zero;
 
         // Converte o input 2D (teclas W,A,S,D ou Setas) para direção 3D no plano X/Z
         Vector3 moveDirection = new Vector3(input.x, 0f, input.y).normalized;
