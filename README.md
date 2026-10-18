@@ -17,8 +17,8 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="prints/menu.png" alt="Menu Inicial - Tiny Island Game" width="48%" />
-  <img src="prints/game.png" alt="Gameplay - Tiny Island Game" width="48%" />
+  <img src="prints/menu.PNG" alt="Menu Inicial - Tiny Island Game" width="48%" />
+  <img src="prints/game.PNG" alt="Gameplay - Tiny Island Game" width="48%" />
 </p>
 
 ---
