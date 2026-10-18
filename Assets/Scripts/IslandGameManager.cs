@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Gerencia o estado completo do jogo (Menu Inicial, Transição, Gameplay, Pausa, Vitória)
-/// e provê interface estilizada minimalista e feedback sonoro procedural.
+/// e provê interface estilizada minimalista, feedback sonoro procedural e controle de áudio/saída.
 /// </summary>
 public class IslandGameManager : MonoBehaviour
 {
@@ -35,6 +35,8 @@ public class IslandGameManager : MonoBehaviour
     [Header("Menu e Animações")]
     public float menuAlpha = 1f;
     public bool showControlsModal = false;
+    public bool showExitConfirmModal = false;
+    public bool isAudioMuted = false;
 
     // Componente de Áudio para efeitos sonoros procedurais
     private static AudioSource audioSource;
@@ -52,12 +54,16 @@ public class IslandGameManager : MonoBehaviour
     private static Texture2D texBtnSlateNormal;
     private static Texture2D texBtnSlateHover;
     private static Texture2D texBtnSlateActive;
+    private static Texture2D texBtnRedNormal;
+    private static Texture2D texBtnRedHover;
+    private static Texture2D texBtnRedActive;
 
     // Estilos de GUI em cache
     private GUIStyle stylePanelNavy;
     private GUIStyle stylePanelModal;
     private GUIStyle styleBtnGold;
     private GUIStyle styleBtnSlate;
+    private GUIStyle styleBtnRed;
     private GUIStyle styleTitle;
     private GUIStyle styleTitleShadow;
     private GUIStyle styleSubtitle;
@@ -106,10 +112,25 @@ public class IslandGameManager : MonoBehaviour
         {
             menuAlpha = Mathf.MoveTowards(menuAlpha, 1f, Time.deltaTime * 3.5f);
 
-            // Atalho de teclado / controle para iniciar direto (Espaço, Enter ou botão sul do controle)
-            if (!showControlsModal && WasStartHotkeyPressed())
+            // Atalho para iniciar (Espaço / Enter / Gamepad A) quando nenhum modal estiver ativo
+            if (!showControlsModal && !showExitConfirmModal && WasStartHotkeyPressed())
             {
                 StartExpedition();
+            }
+
+            // Tecla ESC no Menu Principal
+            if (WasPauseHotkeyPressed())
+            {
+                if (showControlsModal)
+                {
+                    showControlsModal = false;
+                    PlayMenuClickSound();
+                }
+                else
+                {
+                    showExitConfirmModal = !showExitConfirmModal;
+                    PlayMenuClickSound();
+                }
             }
         }
         else if (currentState == GameState.Transitioning)
@@ -133,8 +154,21 @@ public class IslandGameManager : MonoBehaviour
         {
             if (WasPauseHotkeyPressed())
             {
-                currentState = GameState.Playing;
-                PlayMenuClickSound();
+                if (showControlsModal)
+                {
+                    showControlsModal = false;
+                    PlayMenuClickSound();
+                }
+                else if (showExitConfirmModal)
+                {
+                    showExitConfirmModal = false;
+                    PlayMenuClickSound();
+                }
+                else
+                {
+                    currentState = GameState.Playing;
+                    PlayMenuClickSound();
+                }
             }
         }
     }
@@ -210,13 +244,34 @@ public class IslandGameManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        // Recarrega a cena para reiniciar o estado limpo e voltar ao menu
+        showControlsModal = false;
+        showExitConfirmModal = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void RestartGame()
     {
+        showControlsModal = false;
+        showExitConfirmModal = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void ToggleAudio()
+    {
+        isAudioMuted = !isAudioMuted;
+        AudioListener.volume = isAudioMuted ? 0f : 1f;
+        PlayMenuClickSound();
+    }
+
+    public void QuitGame()
+    {
+        PlayMenuClickSound();
+        Debug.Log("<color=cyan>[TinyIsland]</color> Fechando o jogo com sucesso!");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     public void AddScore(int amount, string itemName)
@@ -367,6 +422,11 @@ public class IslandGameManager : MonoBehaviour
         texBtnSlateNormal = MakeRoundedBoxTexture(48, 48, 12, new Color(0.12f, 0.22f, 0.32f, 0.90f), new Color(0.28f, 0.45f, 0.62f, 0.5f), 1);
         texBtnSlateHover = MakeRoundedBoxTexture(48, 48, 12, new Color(0.18f, 0.32f, 0.46f, 0.98f), new Color(1.0f, 0.84f, 0.35f, 0.75f), 2);
         texBtnSlateActive = MakeRoundedBoxTexture(48, 48, 12, new Color(0.08f, 0.16f, 0.24f, 1f), new Color(0.28f, 0.45f, 0.62f, 0.8f), 1);
+
+        // Botão Vermelho de Sair (Normal, Hover, Ativo)
+        texBtnRedNormal = MakeRoundedBoxTexture(48, 48, 12, new Color(0.42f, 0.12f, 0.15f, 0.90f), new Color(0.85f, 0.25f, 0.28f, 0.6f), 1);
+        texBtnRedHover = MakeRoundedBoxTexture(48, 48, 12, new Color(0.65f, 0.16f, 0.20f, 0.98f), new Color(1.0f, 0.45f, 0.45f, 0.9f), 2);
+        texBtnRedActive = MakeRoundedBoxTexture(48, 48, 12, new Color(0.30f, 0.08f, 0.10f, 1f), new Color(0.6f, 0.15f, 0.18f, 0.8f), 1);
     }
 
     private static Texture2D MakeRoundedBoxTexture(int width, int height, int radius, Color fillColor, Color borderColor, int borderWidth = 0)
@@ -438,7 +498,7 @@ public class IslandGameManager : MonoBehaviour
             hover = { background = texBtnGoldHover, textColor = new Color(0.12f, 0.06f, 0.0f) },
             active = { background = texBtnGoldActive, textColor = Color.black },
             border = new RectOffset(12, 12, 12, 12),
-            fontSize = 17,
+            fontSize = 16,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
@@ -450,7 +510,19 @@ public class IslandGameManager : MonoBehaviour
             hover = { background = texBtnSlateHover, textColor = new Color(1.0f, 0.90f, 0.4f) },
             active = { background = texBtnSlateActive, textColor = Color.white },
             border = new RectOffset(12, 12, 12, 12),
-            fontSize = 15,
+            fontSize = 14,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter
+        };
+
+        // Botão Vermelho de Saída
+        styleBtnRed = new GUIStyle(GUI.skin.button)
+        {
+            normal = { background = texBtnRedNormal, textColor = new Color(1f, 0.88f, 0.88f) },
+            hover = { background = texBtnRedHover, textColor = Color.white },
+            active = { background = texBtnRedActive, textColor = Color.white },
+            border = new RectOffset(12, 12, 12, 12),
+            fontSize = 14,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
@@ -541,7 +613,7 @@ public class IslandGameManager : MonoBehaviour
             DrawGameplayHud();
         }
 
-        // 3. MENU DE PAUSA (ESC)
+        // 3. MENU DE PAUSA & OPÇÕES (acionado ao apertar ESC durante o jogo)
         if (currentState == GameState.Paused)
         {
             DrawPauseMenu();
@@ -564,12 +636,12 @@ public class IslandGameManager : MonoBehaviour
 
         // Dimensões do Card Central do Menu
         float cardW = 380f;
-        float cardH = 310f;
+        float cardH = 340f;
         float cardX = (screenW - cardW) * 0.5f;
         float cardY = (screenH - cardH) * 0.5f + 40f;
 
         // Posição do Título (acima do card, flutuando)
-        float titleY = cardY - 110f + floatOffset;
+        float titleY = cardY - 105f + floatOffset;
 
         // Sombra do título
         GUI.Label(new Rect(cardX + 2, titleY + 2, cardW, 46), "🏝️ TINY ISLAND", styleTitleShadow);
@@ -582,40 +654,52 @@ public class IslandGameManager : MonoBehaviour
         // Painel Central translúcido
         GUI.Box(new Rect(cardX, cardY, cardW, cardH), "", stylePanelNavy);
 
-        // Botão 1: Começar Expedição (Dourado vibrante)
+        // Botões do Menu Inicial
         float btnW = 280f;
         float btnX = cardX + (cardW - btnW) * 0.5f;
-        float startY = cardY + 36f;
+        float startY = cardY + 30f;
 
-        if (GUI.Button(new Rect(btnX, startY, btnW, 48), "▶ COMEÇAR EXPEDIÇÃO", styleBtnGold))
+        // Botão 1: Começar Expedição (Dourado vibrante)
+        if (GUI.Button(new Rect(btnX, startY, btnW, 46), "▶ COMEÇAR EXPEDIÇÃO", styleBtnGold))
         {
             StartExpedition();
         }
 
         // Botão 2: Como Jogar (Slate elegante)
-        if (GUI.Button(new Rect(btnX, startY + 64, btnW, 42), "📜 Como Jogar", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 56, btnW, 38), "📜 Como Jogar", styleBtnSlate))
         {
             PlayMenuClickSound();
             showControlsModal = true;
         }
 
-        // Botão 3: Reiniciar Ilha (caso queira resetar moedas ou câmera)
-        if (GUI.Button(new Rect(btnX, startY + 118, btnW, 38), "🔄 Reiniciar Ilha", styleBtnSlate))
+        // Botão 3: Som Ativado / Mudo
+        string soundLabel = isAudioMuted ? "🔇 Som: Desativado" : "🔊 Som: Ativado";
+        if (GUI.Button(new Rect(btnX, startY + 104, btnW, 38), soundLabel, styleBtnSlate))
+        {
+            ToggleAudio();
+        }
+
+        // Botão 4: Sair do Jogo
+        if (GUI.Button(new Rect(btnX, startY + 152, btnW, 38), "🚪 Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
-            RestartGame();
+            showExitConfirmModal = true;
         }
 
         // Dica de teclado / controle
-        GUI.Label(new Rect(cardX, startY + 172, cardW, 22), "💡 Pressione [ESPAÇO] ou clique para iniciar", styleHint);
+        GUI.Label(new Rect(cardX, startY + 204, cardW, 22), "💡 [ESPAÇO] Iniciar   •   [ESC] Sair", styleHint);
 
-        // Créditos com o nome do criador (conforme GDD & Roadmap)
-        GUI.Label(new Rect(cardX, startY + 225, cardW, 24), "Tiny Island v1.1 • Feito por Edu Braga", styleCredits);
+        // Créditos com o nome do criador
+        GUI.Label(new Rect(cardX, startY + 255, cardW, 24), "Tiny Island v1.1 • Feito por Edu Braga", styleCredits);
 
-        // MODAL COMO JOGAR (se acionado)
+        // MODAIS
         if (showControlsModal)
         {
             DrawControlsModal();
+        }
+        else if (showExitConfirmModal)
+        {
+            DrawExitConfirmModal();
         }
     }
 
@@ -623,9 +707,6 @@ public class IslandGameManager : MonoBehaviour
     {
         float screenW = Screen.width;
         float screenH = Screen.height;
-
-        // Fundo escuro sutil
-        GUI.Box(new Rect(0, 0, screenW, screenH), "", GUIStyle.none);
 
         float modalW = 480f;
         float modalH = 330f;
@@ -674,6 +755,48 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
+    private void DrawExitConfirmModal()
+    {
+        float screenW = Screen.width;
+        float screenH = Screen.height;
+
+        float modalW = 420f;
+        float modalH = 205f;
+        float modalX = (screenW - modalW) * 0.5f;
+        float modalY = (screenH - modalH) * 0.5f;
+
+        GUI.Box(new Rect(modalX, modalY, modalW, modalH), "", stylePanelModal);
+
+        GUIStyle exitHeader = new GUIStyle(styleTitle) { fontSize = 22 };
+        exitHeader.normal.textColor = new Color(1f, 0.84f, 0.35f);
+        GUI.Label(new Rect(modalX, modalY + 22, modalW, 30), "🚪 SAIR DO JOGO", exitHeader);
+
+        GUIStyle confirmMsg = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 14,
+            alignment = TextAnchor.MiddleCenter
+        };
+        confirmMsg.normal.textColor = Color.white;
+        GUI.Label(new Rect(modalX + 20, modalY + 68, modalW - 40, 24), "Tem certeza de que deseja fechar o jogo?", confirmMsg);
+
+        float btnW = 150f;
+        float gap = 20f;
+        float totalW = btnW * 2 + gap;
+        float startX = modalX + (modalW - totalW) * 0.5f;
+        float btnY = modalY + 120f;
+
+        if (GUI.Button(new Rect(startX, btnY, btnW, 42), "✓ Sim, Sair", styleBtnRed))
+        {
+            QuitGame();
+        }
+
+        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 42), "✕ Cancelar", styleBtnSlate))
+        {
+            PlayMenuClickSound();
+            showExitConfirmModal = false;
+        }
+    }
+
     private void DrawGameplayHud()
     {
         int boxWidth = 320;
@@ -700,7 +823,7 @@ public class IslandGameManager : MonoBehaviour
             alignment = TextAnchor.MiddleRight
         };
         timeCornerStyle.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
-        GUI.Label(new Rect(Screen.width - 240, 20, 215, 24), $"⏱️ {gameTimer:F1}s   [ESC] Pausa", timeCornerStyle);
+        GUI.Label(new Rect(Screen.width - 240, 20, 215, 24), $"⏱️ {gameTimer:F1}s   [ESC] Menu", timeCornerStyle);
     }
 
     private void DrawPauseMenu()
@@ -708,8 +831,8 @@ public class IslandGameManager : MonoBehaviour
         float screenW = Screen.width;
         float screenH = Screen.height;
 
-        float panelW = 340f;
-        float panelH = 260f;
+        float panelW = 380f;
+        float panelH = 370f;
         float panelX = (screenW - panelW) * 0.5f;
         float panelY = (screenH - panelH) * 0.5f;
 
@@ -720,35 +843,72 @@ public class IslandGameManager : MonoBehaviour
             fontSize = 24
         };
         pauseHeader.normal.textColor = new Color(1f, 0.88f, 0.35f);
-        GUI.Label(new Rect(panelX, panelY + 22, panelW, 32), "⏸️ JOGO PAUSADO", pauseHeader);
+        GUI.Label(new Rect(panelX, panelY + 22, panelW, 32), "⏸️ MENU DE PAUSA", pauseHeader);
 
-        float btnW = 240f;
+        float btnW = 280f;
         float btnX = panelX + (panelW - btnW) * 0.5f;
-        float startY = panelY + 70f;
+        float startY = panelY + 68f;
 
-        if (GUI.Button(new Rect(btnX, startY, btnW, 42), "▶ Continuar", styleBtnGold))
+        // 1. Continuar Expedição
+        if (GUI.Button(new Rect(btnX, startY, btnW, 40), "▶ Continuar Expedição", styleBtnGold))
         {
             PlayMenuClickSound();
             currentState = GameState.Playing;
         }
 
-        if (GUI.Button(new Rect(btnX, startY + 54, btnW, 40), "🔄 Reiniciar Ilha", styleBtnSlate))
+        // 2. Alternar Som
+        string soundLabel = isAudioMuted ? "🔇 Som: Desativado" : "🔊 Som: Ativado";
+        if (GUI.Button(new Rect(btnX, startY + 48, btnW, 36), soundLabel, styleBtnSlate))
+        {
+            ToggleAudio();
+        }
+
+        // 3. Guia de Controles
+        if (GUI.Button(new Rect(btnX, startY + 92, btnW, 36), "📜 Controles & Objetivo", styleBtnSlate))
+        {
+            PlayMenuClickSound();
+            showControlsModal = true;
+        }
+
+        // 4. Reiniciar Ilha
+        if (GUI.Button(new Rect(btnX, startY + 136, btnW, 36), "🔄 Reiniciar Ilha", styleBtnSlate))
         {
             PlayMenuClickSound();
             RestartGame();
         }
 
-        if (GUI.Button(new Rect(btnX, startY + 106, btnW, 40), "🏠 Menu Principal", styleBtnSlate))
+        // 5. Menu Principal
+        if (GUI.Button(new Rect(btnX, startY + 180, btnW, 36), "🏠 Menu Principal", styleBtnSlate))
         {
             PlayMenuClickSound();
             ReturnToMainMenu();
+        }
+
+        // 6. Sair do Jogo
+        if (GUI.Button(new Rect(btnX, startY + 224, btnW, 36), "🚪 Sair do Jogo", styleBtnRed))
+        {
+            PlayMenuClickSound();
+            showExitConfirmModal = true;
+        }
+
+        // Dica
+        GUI.Label(new Rect(panelX, startY + 272, panelW, 20), "💡 Pressione [ESC] para retornar ao jogo", styleHint);
+
+        // Modais sobre o menu de pausa
+        if (showControlsModal)
+        {
+            DrawControlsModal();
+        }
+        else if (showExitConfirmModal)
+        {
+            DrawExitConfirmModal();
         }
     }
 
     private void DrawVictoryPanel()
     {
         int panelW = 460;
-        int panelH = 240;
+        int panelH = 260;
         int screenX = (Screen.width - panelW) / 2;
         int screenY = (Screen.height - panelH) / 2 - 20;
 
@@ -785,18 +945,31 @@ public class IslandGameManager : MonoBehaviour
         float gap = 16f;
         float totalBtnW = btnW * 2 + gap;
         float startX = screenX + (panelW - totalBtnW) * 0.5f;
-        float btnY = screenY + 145f;
+        float btnY = screenY + 130f;
 
-        if (GUI.Button(new Rect(startX, btnY, btnW, 46), "🔄 Jogar Novamente", styleBtnGold))
+        if (GUI.Button(new Rect(startX, btnY, btnW, 44), "🔄 Jogar Novamente", styleBtnGold))
         {
             PlayMenuClickSound();
             RestartGame();
         }
 
-        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 46), "🏠 Menu Inicial", styleBtnSlate))
+        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 44), "🏠 Menu Inicial", styleBtnSlate))
         {
             PlayMenuClickSound();
             ReturnToMainMenu();
+        }
+
+        // Botão de Sair do Jogo na Vitória
+        float quitW = 200f;
+        if (GUI.Button(new Rect(screenX + (panelW - quitW) * 0.5f, btnY + 54, quitW, 36), "🚪 Sair do Jogo", styleBtnRed))
+        {
+            PlayMenuClickSound();
+            showExitConfirmModal = true;
+        }
+
+        if (showExitConfirmModal)
+        {
+            DrawExitConfirmModal();
         }
     }
 }
