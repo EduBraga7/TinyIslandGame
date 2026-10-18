@@ -25,9 +25,11 @@ public class IslandGameManager : MonoBehaviour
     public GameState currentState = GameState.MainMenu;
 
     [Header("Regras da Expedição")]
-    public int targetCoins = 6;
+    public int targetCoins = 12;
     public int totalItemsCollected = 0;
     public bool isVictory = false;
+    public string lastCollectedItemName = "";
+    private float lastCollectDisplayTimer = 0f;
 
     [Header("Cronômetro")]
     public float gameTimer = 0f;
@@ -103,6 +105,12 @@ public class IslandGameManager : MonoBehaviour
         // Inicia no Menu Principal por padrão
         currentState = GameState.MainMenu;
         menuAlpha = 1f;
+
+        CollectibleItem[] allCoins = FindObjectsByType<CollectibleItem>();
+        if (allCoins != null && allCoins.Length > 0)
+        {
+            targetCoins = allCoins.Length;
+        }
     }
 
     void Update()
@@ -279,6 +287,8 @@ public class IslandGameManager : MonoBehaviour
         if (isVictory) return;
 
         totalItemsCollected += amount;
+        lastCollectedItemName = itemName;
+        lastCollectDisplayTimer = 3.5f;
         PlayCoinSound();
 
         // Checa condição de vitória
@@ -292,7 +302,7 @@ public class IslandGameManager : MonoBehaviour
     {
         isVictory = true;
         currentState = GameState.Victory;
-        Debug.Log("<color=yellow><b>[TinyIsland] VITÓRIA!</b> Todas as 6 moedas foram coletadas!</color>");
+        Debug.Log($"<color=yellow><b>[TinyIsland] VITÓRIA!</b> Todas as {targetCoins} moedas foram coletadas!</color>");
 
         // Abre o baú do tesouro
         if (TreasureChest.Instance != null)
@@ -740,12 +750,12 @@ public class IslandGameManager : MonoBehaviour
 
         GUI.Label(new Rect(modalX + 30, modalY + 65, modalW - 60, 22), "OBJETIVO:", bodyBold);
         GUI.Label(new Rect(modalX + 30, modalY + 88, modalW - 60, 42),
-            "Explore a praia e o platô para reunir as 6 moedas de ouro antigas e destrancar o lendário Baú do Tesouro!", bodyNormal);
+            $"Explore o arquipélago (Farol, Píer, Veleiro, Ponte, Acampamento, Recife e Ruínas) para encontrar as {targetCoins} moedas de ouro e abrir o Baú do Tesouro!", bodyNormal);
 
         // Controles
         GUI.Label(new Rect(modalX + 30, modalY + 140, modalW - 60, 22), "CONTROLES:", bodyBold);
-        GUI.Label(new Rect(modalX + 30, modalY + 162, modalW - 60, 50),
-            "- Teclas W, A, S, D ou Setas: Caminhar pela ilha\n- Gamepad: Alavanca esquerda (Left Stick)\n- Sem estresse: Cair no mar não dá dano - você volta são e salvo!", bodyNormal);
+        GUI.Label(new Rect(modalX + 30, modalY + 162, modalW - 60, 62),
+            "- W, A, S, D ou Setas / Left Stick: Caminhar pela ilha\n- ESPAÇO / Botão A: Pular nas pedras, barco e colinas\n- Sem estresse: Cair no mar não dá dano - você volta são e salvo!", bodyNormal);
 
         // Botão Fechar Modal
         if (GUI.Button(new Rect(modalX + (modalW - 180) * 0.5f, modalY + modalH - 58, 180, 40), "Entendido", styleBtnGold))
@@ -799,21 +809,30 @@ public class IslandGameManager : MonoBehaviour
 
     private void DrawGameplayHud()
     {
-        int boxWidth = 320;
-        int boxHeight = 65;
+        int boxWidth = 350;
+        int boxHeight = 68;
         GUI.Box(new Rect(20, 20, boxWidth, boxHeight), "", styleHudBox);
 
-        GUI.Label(new Rect(34, 26, 290, 26), $"Moedas: {totalItemsCollected} / {targetCoins}", styleHudCoins);
+        GUI.Label(new Rect(34, 26, 320, 26), $"Moedas: {totalItemsCollected} / {targetCoins}", styleHudCoins);
 
         if (!isVictory)
         {
-            styleHudSub.normal.textColor = new Color(0.9f, 0.9f, 0.9f);
-            GUI.Label(new Rect(34, 52, 290, 24), "Colete todas para abrir o Baú do Tesouro!", styleHudSub);
+            if (lastCollectDisplayTimer > 0f && !string.IsNullOrEmpty(lastCollectedItemName))
+            {
+                lastCollectDisplayTimer -= Time.deltaTime;
+                styleHudSub.normal.textColor = new Color(1f, 0.92f, 0.45f);
+                GUI.Label(new Rect(34, 52, 320, 24), $"+1: {lastCollectedItemName}", styleHudSub);
+            }
+            else
+            {
+                styleHudSub.normal.textColor = new Color(0.9f, 0.9f, 0.9f);
+                GUI.Label(new Rect(34, 52, 320, 24), "Explore a ilha! [ESPAÇO] para Pular", styleHudSub);
+            }
         }
         else
         {
             styleHudSub.normal.textColor = new Color(0.3f, 1f, 0.4f);
-            GUI.Label(new Rect(34, 52, 290, 24), "O Baú do Tesouro foi aberto!", styleHudSub);
+            GUI.Label(new Rect(34, 52, 320, 24), "O Baú do Tesouro no Santuário abriu!", styleHudSub);
         }
 
         // Indicador discreto de tempo no topo direito + atalho de pausa

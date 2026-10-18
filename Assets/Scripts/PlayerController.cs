@@ -15,13 +15,16 @@ public class PlayerController : MonoBehaviour
     public bool canMove = true;
 
     [Tooltip("Velocidade com que o personagem anda")]
-    public float moveSpeed = 6f;
+    public float moveSpeed = 7.2f;
+
+    [Tooltip("Altura do pulo do explorador")]
+    public float jumpHeight = 1.65f;
 
     [Tooltip("Velocidade de rotação para encarar a direção que está se movendo")]
-    public float rotationSpeed = 12f;
+    public float rotationSpeed = 14f;
 
     [Tooltip("Força da gravidade quando o jogador estiver no ar")]
-    public float gravity = -20f;
+    public float gravity = -22f;
 
     [Header("Partes do Corpo (Animação Procedural)")]
     public Transform torsoTransform;
@@ -42,10 +45,16 @@ public class PlayerController : MonoBehaviour
     private Vector3 initialTorsoPos;
     private float animTimer = 0f;
     private float idleTimer = 0f;
+    private float groundedGraceTimer = 0f;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        if (controller != null)
+        {
+            controller.stepOffset = 0.45f;
+            controller.slopeLimit = 55f;
+        }
     }
 
     void Start()
@@ -85,36 +94,76 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // Aplica gravidade para manter os pés no chão da ilha
-        if (controller.isGrounded && verticalVelocity.y < 0)
+        // Coyote time para pulo responsivo em bordas e pedras
+        if (controller.isGrounded)
         {
-            verticalVelocity.y = -2f;
+            groundedGraceTimer = 0.15f;
+            if (verticalVelocity.y < 0f)
+            {
+                verticalVelocity.y = -2f;
+            }
         }
         else
         {
-            verticalVelocity.y += gravity * Time.deltaTime;
+            groundedGraceTimer -= Time.deltaTime;
         }
+
+        // Pulo com Espaço ou Botão A do Controle
+        if (movementAllowed && groundedGraceTimer > 0f && WasJumpPressed())
+        {
+            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            groundedGraceTimer = 0f;
+        }
+
+        verticalVelocity.y += gravity * Time.deltaTime;
 
         // Move o personagem considerando velocidade e gravidade
         Vector3 finalMove = (moveDirection * moveSpeed) + verticalVelocity;
         controller.Move(finalMove * Time.deltaTime);
 
-        // Animação procedural de caminhada e respiração ociosa
+        // Animação procedural de caminhada, pulo e respiração ociosa
         AnimateCharacter(moveDirection.magnitude);
 
-        // Se o jogador cair da ilha no mar (abaixo de Y = -1), respawna suavemente no centro!
-        if (transform.position.y < -1f)
+        // Se o jogador cair da ilha no mar fundo (abaixo de Y = -1.2), respawna suavemente na ilha principal!
+        if (transform.position.y < -1.2f)
         {
             controller.enabled = false;
-            transform.position = new Vector3(0f, 1.5f, 0f);
+            transform.position = new Vector3(0f, 1.5f, -2f);
             verticalVelocity = Vector3.zero;
             controller.enabled = true;
         }
     }
 
+    private bool WasJumpPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
+        {
+            return true;
+        }
+        return false;
+#else
+        return Input.GetKeyDown(KeyCode.Space);
+#endif
+    }
+
     private void AnimateCharacter(float inputMagnitude)
     {
         if (torsoTransform == null && legLTransform == null) return;
+
+        if (!controller.isGrounded && Mathf.Abs(verticalVelocity.y) > 1.2f)
+        {
+            // Pose alegre de pulo no ar
+            if (armLTransform != null) armLTransform.localRotation = Quaternion.Slerp(armLTransform.localRotation, Quaternion.Euler(-135f, 0, 0), Time.deltaTime * 12f);
+            if (armRTransform != null) armRTransform.localRotation = Quaternion.Slerp(armRTransform.localRotation, Quaternion.Euler(-135f, 0, 0), Time.deltaTime * 12f);
+            if (legLTransform != null) legLTransform.localRotation = Quaternion.Slerp(legLTransform.localRotation, Quaternion.Euler(22f, 0, 0), Time.deltaTime * 12f);
+            if (legRTransform != null) legRTransform.localRotation = Quaternion.Slerp(legRTransform.localRotation, Quaternion.Euler(-22f, 0, 0), Time.deltaTime * 12f);
+            return;
+        }
 
         bool isMoving = inputMagnitude > 0.1f && controller.isGrounded;
 
