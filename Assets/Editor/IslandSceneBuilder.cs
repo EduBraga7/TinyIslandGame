@@ -2,6 +2,8 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -55,16 +57,17 @@ public static class IslandSceneBuilder
         Material matCrystal     = GetOrCreateMaterial("Assets/Materials/M_Crystal.mat",     new Color(0.12f, 0.90f, 0.96f), 0.25f, 0.95f, true, new Color(0.08f, 0.75f, 0.95f) * 1.8f);
         Material matBushLeaf    = GetOrCreateMaterial("Assets/Materials/M_BushLeaf.mat",    new Color(0.20f, 0.68f, 0.28f), 0f, 0.25f);
         Material matFlowerPink  = GetOrCreateMaterial("Assets/Materials/M_FlowerPink.mat",  new Color(0.96f, 0.28f, 0.58f), 0f, 0.45f);
+        Material matFoam        = GetOrCreateTransparentMaterial("Assets/Materials/M_EspumaMar.mat", new Color(1.0f, 1.0f, 1.0f, 0.72f), 0.92f);
 
         // 3. Limpa objetos antigos da cena para reconstruir do zero sem duplicatas
         CleanUpOldObjects(
             "Ilha", "GramaTopo", "Oceano", "Player", "GameManager",
             "Colecionaveis", "Palmeiras", "BauDoTesouro", "Pedras",
-            "Estruturas", "Vegetacao", "Trilhas"
+            "Estruturas", "Vegetacao", "Trilhas", "EspumaMar", "GlobalVolume"
         );
 
         // =========================================================================
-        // 4. OCEANO PROFUNDO E LAGOAS COSTEIRAS DE ÁGUA RASA
+        // 4. OCEANO PROFUNDO, LAGOAS COSTEIRAS E ESPUMA COSTEIRA DINÂMICA
         // =========================================================================
         GameObject oceanGroup = new GameObject("Oceano");
 
@@ -80,6 +83,18 @@ public static class IslandSceneBuilder
         CreateShallowRing(oceanGroup.transform, "LagoaPrincipal", new Vector3(0f, -0.36f, 0f), new Vector3(44f, 0.06f, 44f), matWaterShallow);
         CreateShallowRing(oceanGroup.transform, "LagoaSantuario", new Vector3(26.5f, -0.36f, 2f), new Vector3(19f, 0.06f, 19f), matWaterShallow);
         CreateShallowRing(oceanGroup.transform, "LagoaRecife",    new Vector3(-26.5f, -0.36f, -3f), new Vector3(14f, 0.06f, 14f), matWaterShallow);
+
+        // Anéis de Espuma Costeira Dinâmica (com respiração de maré e variação de opacidade)
+        GameObject foamGroup = new GameObject("EspumaMar");
+        foamGroup.transform.SetParent(oceanGroup.transform);
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaCosteira_Principal", new Vector3(0f, -0.315f, 0f), new Vector3(40.6f, 0.035f, 40.6f), matFoam, 0f, 0.90f, 0.035f);
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaCosteira_Santuario", new Vector3(26.5f, -0.315f, 2.0f), new Vector3(17.5f, 0.035f, 17.5f), matFoam, 1.2f, 0.85f, 0.032f);
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaCosteira_Recife",    new Vector3(-26.5f, -0.315f, -3.0f), new Vector3(12.2f, 0.035f, 12.2f), matFoam, 2.4f, 0.95f, 0.038f);
+
+        // Marolas de espuma ao redor das pedras de travessia marítima
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaPedra_1", new Vector3(-18.2f, -0.315f, -2.8f), new Vector3(3.3f, 0.025f, 3.3f), matFoam, 0.7f, 1.1f, 0.045f);
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaPedra_2", new Vector3(-20.4f, -0.315f, -3.3f), new Vector3(3.2f, 0.025f, 3.2f), matFoam, 1.8f, 1.1f, 0.045f);
+        CreateShorelineFoamRing(foamGroup.transform, "EspumaPedra_3", new Vector3(-22.5f, -0.315f, -2.7f), new Vector3(3.3f, 0.025f, 3.3f), matFoam, 2.9f, 1.1f, 0.045f);
 
         // =========================================================================
         // 5. GEOMETRIA DO ARQUIPÉLAGO (ILHA PRINCIPAL EM NÍVEIS + 2 ILHOTAS)
@@ -499,11 +514,46 @@ public static class IslandSceneBuilder
         gm.targetCoins = coinLocations.Length;
         gmObj.AddComponent<IslandAtmosphereManager>();
 
-        // 12. Salva a cena
+        // 12. Pós-processamento URP (Volume Global) e Calibração de Sombras
+        SetupPostProcessingVolume();
+
+        GameObject sunObj = GameObject.Find("Directional Light");
+        if (sunObj != null)
+        {
+            Light sunL = sunObj.GetComponent<Light>();
+            if (sunL != null)
+            {
+                sunL.shadows = LightShadows.Soft;
+                sunL.shadowStrength = 0.85f;
+            }
+        }
+
+        // 13. Salva a cena
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
 
         Debug.Log($"<color=green><b>[TinyIsland] SUCESSO!</b></color> Arquipélago completo construído com {coinLocations.Length} moedas em locais estratégicos!");
+    }
+
+    [MenuItem("TinyIsland/🎨 Atualizar Direção de Arte e Iluminação")]
+    public static void UpdateArtDirectionAndLighting()
+    {
+        SetupPostProcessingVolume();
+
+        GameObject sunObj = GameObject.Find("Directional Light");
+        if (sunObj != null)
+        {
+            Light sunL = sunObj.GetComponent<Light>();
+            if (sunL != null)
+            {
+                sunL.shadows = LightShadows.Soft;
+                sunL.shadowStrength = 0.85f;
+            }
+        }
+
+        EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("<color=green><b>[TinyIsland]</b></color> Direção de Arte, Pós-Processamento e Iluminação URP atualizados com sucesso!");
     }
 
     [MenuItem("TinyIsland/📦 Atualizar Baú do Tesouro")]
@@ -789,6 +839,147 @@ public static class IslandSceneBuilder
 
         EditorUtility.SetDirty(mat);
         return mat;
+    }
+
+    private static Material GetOrCreateTransparentMaterial(string path, Color color, float smoothness = 0.9f)
+    {
+        Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, path);
+        }
+
+        // Configura modo transparente no URP Lit
+        mat.SetFloat("_Surface", 1f); // 1 = Transparent
+        mat.SetFloat("_Blend", 0f);   // 0 = Alpha blend
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.renderQueue = 3050; // Renderiza acima do oceano sem z-fighting
+        mat.SetOverrideTag("RenderType", "Transparent");
+
+        mat.color = color;
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", smoothness);
+
+        mat.EnableKeyword("_EMISSION");
+        if (mat.HasProperty("_EmissionColor"))
+            mat.SetColor("_EmissionColor", new Color(0.95f, 0.98f, 1.0f) * 0.55f);
+
+        EditorUtility.SetDirty(mat);
+        return mat;
+    }
+
+    private static GameObject CreateShorelineFoamRing(Transform parent, string name, Vector3 pos, Vector3 scale, Material mat, float phaseOffset = 0f, float waveSpeed = 0.90f, float amplitude = 0.035f)
+    {
+        GameObject foamObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        foamObj.name = name;
+        foamObj.transform.SetParent(parent);
+        foamObj.transform.position = pos;
+        foamObj.transform.localScale = scale;
+        foamObj.GetComponent<Renderer>().sharedMaterial = mat;
+        Object.DestroyImmediate(foamObj.GetComponent<Collider>());
+
+        WaterShorelineFoam foamScript = foamObj.AddComponent<WaterShorelineFoam>();
+        foamScript.phaseOffset = phaseOffset;
+        foamScript.waveSpeed = waveSpeed;
+        foamScript.waveScaleAmplitude = amplitude;
+        foamScript.minAlpha = 0.25f;
+        foamScript.maxAlpha = 0.85f;
+        foamScript.verticalBobAmount = 0.006f;
+
+        return foamObj;
+    }
+
+    private static void SetupPostProcessingVolume()
+    {
+        CleanUpOldObjects("GlobalVolume");
+
+        GameObject volObj = new GameObject("GlobalVolume");
+        Volume volume = volObj.AddComponent<Volume>();
+        volume.isGlobal = true;
+
+        VolumeProfile profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>("Assets/Settings/SampleSceneProfile.asset");
+        if (profile == null)
+        {
+            profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(profile, "Assets/Settings/SampleSceneProfile.asset");
+        }
+
+        profile.components.RemoveAll(c => c == null);
+
+        // Bloom suave (ouro cintilante e farol)
+        if (!profile.TryGet<Bloom>(out Bloom bloom))
+        {
+            bloom = profile.Add<Bloom>(true);
+            AssetDatabase.AddObjectToAsset(bloom, profile);
+        }
+        bloom.active = true;
+        bloom.intensity.overrideState = true;
+        bloom.intensity.value = 0.85f;
+        bloom.threshold.overrideState = true;
+        bloom.threshold.value = 1.05f;
+        bloom.scatter.overrideState = true;
+        bloom.scatter.value = 0.70f;
+        bloom.tint.overrideState = true;
+        bloom.tint.value = new Color(1.0f, 0.94f, 0.82f);
+
+        // Color Adjustments (cores quentes e vibrantes da ilha tropical)
+        if (!profile.TryGet<ColorAdjustments>(out ColorAdjustments colorAdj))
+        {
+            colorAdj = profile.Add<ColorAdjustments>(true);
+            AssetDatabase.AddObjectToAsset(colorAdj, profile);
+        }
+        colorAdj.active = true;
+        colorAdj.postExposure.overrideState = true;
+        colorAdj.postExposure.value = 0.22f;
+        colorAdj.contrast.overrideState = true;
+        colorAdj.contrast.value = 14f;
+        colorAdj.saturation.overrideState = true;
+        colorAdj.saturation.value = 18f;
+        colorAdj.colorFilter.overrideState = true;
+        colorAdj.colorFilter.value = new Color(1.0f, 0.98f, 0.94f);
+
+        // White Balance (sol tropical acolhedor)
+        if (!profile.TryGet<WhiteBalance>(out WhiteBalance wb))
+        {
+            wb = profile.Add<WhiteBalance>(true);
+            AssetDatabase.AddObjectToAsset(wb, profile);
+        }
+        wb.active = true;
+        wb.temperature.overrideState = true;
+        wb.temperature.value = 8f;
+        wb.tint.overrideState = true;
+        wb.tint.value = 0f;
+
+        // Tonemapping (Neutral filmic)
+        if (!profile.TryGet<Tonemapping>(out Tonemapping tm))
+        {
+            tm = profile.Add<Tonemapping>(true);
+            AssetDatabase.AddObjectToAsset(tm, profile);
+        }
+        tm.active = true;
+        tm.mode.overrideState = true;
+        tm.mode.value = TonemappingMode.Neutral;
+
+        // Vignette (efeito diorama / miniatura focado no centro)
+        if (!profile.TryGet<Vignette>(out Vignette vig))
+        {
+            vig = profile.Add<Vignette>(true);
+            AssetDatabase.AddObjectToAsset(vig, profile);
+        }
+        vig.active = true;
+        vig.intensity.overrideState = true;
+        vig.intensity.value = 0.22f;
+        vig.smoothness.overrideState = true;
+        vig.smoothness.value = 0.35f;
+
+        EditorUtility.SetDirty(profile);
+        AssetDatabase.SaveAssets();
+        volume.sharedProfile = profile;
     }
 
     private static void CleanUpOldObjects(params string[] names)

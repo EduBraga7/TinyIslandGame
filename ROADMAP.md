@@ -1,6 +1,6 @@
 # 🗺️ Roadmap & Planos Futuros - Tiny Island
 
-> **Status do Projeto:** Versão `1.1.0` (v1.1 Entregue — Menu, Pulo & Áudio Ambiente)  
+> **Status do Projeto:** Versão `1.2.0` (v1.2 — Direção de Arte, Espuma de Borda & Paisagem Sonora Entregues! 🎨🎶)  
 > **Filosofia de Atualizações:** Incrementos pequenos, divertidos e focados em aprendizado prático — sem sobrecarga (*overengineering*)!
 
 ---
@@ -9,8 +9,8 @@
 
 ```
 ┌─────────────────────────┐       ┌─────────────────────────┐       ┌─────────────────────────┐
-│     v1.0 (Entregue)     │  ──►  │     v1.1 (Concluída)    │  ──►  │   v1.2 (Próximo Foco)   │
-│  MVP Arquipélago 3D     │       │  Menu, Pulo & Áudio     │       │ Cenário Vivo & Detalhes │
+│     v1.0 (Entregue)     │  ──►  │     v1.1 (Concluída)    │  ──►  │     v1.2 (Em Curso)     │
+│  MVP Arquipélago 3D     │       │  Menu, Pulo & Áudio     │       │ Arte, Espuma & Música   │
 └─────────────────────────┘       └─────────────────────────┘       └─────────────────────────┘
 ```
 
@@ -37,20 +37,33 @@
 
 ---
 
-## 🌴 v1.2 — Cenário Vivo & Polimento Visual
+## 🎨 v1.2 — Direção de Arte, Espuma Costeira & Paisagem Sonora (Concluído ✅)
 
-*O objetivo desta versão é transformar a ilha em um ambiente ainda mais vibrante, rico e charmoso.*
+*O objetivo desta versão foi dar o salto de apresentação estética e aconchego sensorial de Tiny Island.*
 
-- [ ] **🏖️ Detalhes e Vida na Praia:**
+- [x] **🌊 Espuma de Borda Costeira Dinâmica (`WaterShorelineFoam`):**
+  - Anéis estilizados de espuma suave nas bordas de areia da praia principal, ilhota do santuário, ilhota do recife e pedras do mar.
+  - Respiração senoidal de maré simulando o quebrar e recuo das ondas.
+  - Modulação contínua de escala e transparência (ao recuar fica tênue, ao quebrar na praia fica branca e nítida).
+  - Material `M_EspumaMar` com renderização translúcida dedicada (`renderQueue = 3050`) e emissão suave ao sol.
+- [x] **🎶 Trilha Sonora Tropical Aconchegante Procedural (`CozyIslandMelody`):**
+  - Composição original de 16 compassos a 84 BPM (~45.7s) em loop contínuo com cross-fade perfeito.
+  - Camada cantante de Kalimba (Thumb Piano com chime de sino), dedilhado de Ukulele/Violão em colcheias e contrabaixo acústico suave.
+  - Sintetizado 100% em código C# em runtime sem arquivos externos ou peso de build.
+  - Integrado ao controle global de áudio e mudo da interface.
+- [x] **✨ Pós-Processamento URP Calibrado & Iluminação Artística:**
+  - Configuração de `GlobalVolume` na cena com perfil persistente `SampleSceneProfile`.
+  - **Bloom suave:** Realce dourado nas moedas de ouro, lanterna do farol e fogueira.
+  - **Color Adjustments:** Saturação quente tropical (+18%), contraste aprimorado e filtro solar sem aspecto "lavado".
+  - **White Balance:** Temperatura aconchegante de verão (+8°C de calor solar).
+  - **Vignette:** Escurecimento sutil nas bordas estilo diorama/tilt-shift.
+  - **Transição Cinematográfica Sunset:** O `IslandAtmosphereManager` agora interpola suavemente os parâmetros de pós-processamento para um dourado alaranjado rico ao alternar entre Dia e Pôr do Sol!
+- [ ] **🏖️ Detalhes e Micro-Adornos na Areia:**
   - Conchinhas do mar e pequenos pedaços de madeira encalhados na areia.
-  - Efeito visual de espuma suave na linha onde a água encosta na praia.
-  - Pequeno barquinho a remo ancorado ou encalhado na beira da areia (o barco da chegada do explorador).
+  - Pequeno barquinho a remo ancorado ou encalhado na beira da areia.
 - [ ] **🌿 Natureza & Micro-Adornos:**
-  - Pequenas flores tropicais coloridas espalhadas pelo platô de grama.
   - Folhas das palmeiras com leve balanço procedural ao vento.
   - Gaivotas voando em círculos no céu ou pequenos siris caminhando na praia.
-- [ ] **✨ Partículas de Coleta Aprimoradas:**
-  - Efeito de brilho estelar ao encostar em cada uma das moedas.
 
 ---
 

@@ -41,14 +41,16 @@ public class IslandGameManager : MonoBehaviour
     public bool showExitConfirmModal = false;
     public bool isAudioMuted = false;
 
-    // Componente de Áudio para efeitos sonoros procedurais
+    // Componente de Áudio para efeitos sonoros procedurais e trilha musical
     private static AudioSource audioSource;
     private static AudioSource ambientAudioSource;
+    private static AudioSource musicAudioSource;
     private static AudioClip coinSound;
     private static AudioClip victorySound;
     private static AudioClip menuClickSound;
     private static AudioClip startSound;
     private static AudioClip oceanAmbienceClip;
+    private static AudioClip cozyMusicClip;
     private static AudioClip jumpSound;
     private static AudioClip landSound;
 
@@ -98,19 +100,31 @@ public class IslandGameManager : MonoBehaviour
             audioSource.playOnAwake = false;
         }
 
-        // Emissor dedicado para o áudio ambiente contínuo do mar/brisa
+        // Emissores dedicados para ambiente contínuo do mar e música aconchegante
         AudioSource[] allSources = gameObject.GetComponents<AudioSource>();
-        if (allSources.Length > 1)
+        if (allSources.Length > 2)
         {
             ambientAudioSource = allSources[1];
+            musicAudioSource = allSources[2];
+        }
+        else if (allSources.Length == 2)
+        {
+            ambientAudioSource = allSources[1];
+            musicAudioSource = gameObject.AddComponent<AudioSource>();
         }
         else
         {
             ambientAudioSource = gameObject.AddComponent<AudioSource>();
+            musicAudioSource = gameObject.AddComponent<AudioSource>();
         }
+
         ambientAudioSource.playOnAwake = false;
         ambientAudioSource.loop = true;
-        ambientAudioSource.volume = 0.28f;
+        ambientAudioSource.volume = 0.22f;
+
+        musicAudioSource.playOnAwake = false;
+        musicAudioSource.loop = true;
+        musicAudioSource.volume = 0.24f;
 
         // Gera sons procedurais sintetizados matematicamente
         GenerateProceduralAudio();
@@ -127,11 +141,17 @@ public class IslandGameManager : MonoBehaviour
 
     void Start()
     {
-        // Inicia o som de mar contínuo relaxante
+        // Inicia o som de mar contínuo relaxante e a música tropical aconchegante
         if (ambientAudioSource != null && oceanAmbienceClip != null && !ambientAudioSource.isPlaying)
         {
             ambientAudioSource.clip = oceanAmbienceClip;
             ambientAudioSource.Play();
+        }
+
+        if (musicAudioSource != null && cozyMusicClip != null && !musicAudioSource.isPlaying)
+        {
+            musicAudioSource.clip = cozyMusicClip;
+            musicAudioSource.Play();
         }
 
         // Se foi clicado em "Jogar Novamente", inicia direto no gameplay!
@@ -540,6 +560,164 @@ public class IslandGameManager : MonoBehaviour
         }
         landSound = AudioClip.Create("PlayerLand", landSamples, 1, sampleRate, false);
         landSound.SetData(landData, 0);
+
+        // 8. Trilha Sonora Aconchegante Tropical (Melodia Acústica Kalimba + Ukulele + Baixo)
+        GenerateCozyAcousticMusic(sampleRate);
+    }
+
+    /// <summary>
+    /// Gera a melodia acústica relaxante de Tiny Island sintetizada proceduralmente.
+    /// Loop de 16 compassos a 84 BPM (~45.7 segundos) com timbres de Kalimba, dedilhado de Ukulele e contrabaixo suave.
+    /// </summary>
+    private static void GenerateCozyAcousticMusic(int sampleRate)
+    {
+        float bpm = 84f;
+        float beatDuration = 60f / bpm; // ~0.7142857s
+        float barDuration = beatDuration * 4f; // ~2.857143s
+        int totalBars = 16;
+        float totalDuration = totalBars * barDuration; // ~45.714s
+        int totalSamples = (int)(sampleRate * totalDuration);
+        float[] musicData = new float[totalSamples];
+
+        // Frequências das notas fundamentais (Hz)
+        float C2 = 65.41f, D2 = 73.42f, E2 = 82.41f, F2 = 87.31f, G2 = 98.00f, A2 = 110.00f, B2 = 123.47f;
+        float C3 = 130.81f, D3 = 146.83f, E3 = 164.81f, F3 = 174.61f, G3 = 196.00f, A3 = 220.00f, B3 = 246.94f;
+        float C4 = 261.63f, D4 = 293.66f, E4 = 329.63f, F4 = 349.23f, G4 = 392.00f, A4 = 440.00f, B4 = 493.88f;
+        float C5 = 523.25f, D5 = 587.33f, E5 = 659.25f, F5 = 698.46f, G5 = 783.99f, A5 = 880.00f, B5 = 987.77f;
+        float C6 = 1046.50f, D6 = 1174.66f;
+
+        // Progressão harmônica dos 16 compassos:
+        // C - G - Am - F | C - Em - F - G7 | Am - Em - F - C | Dm7 - Em7 - F - G
+        float[] chordRootsBass = new float[16] { C2, G2, A2, F2, C2, E2, F2, G2, A2, E2, F2, C2, D2, E2, F2, G2 };
+
+        // Arpeggios de dedilhado (Ukulele / Violão Nylon): 4 notas por compasso repetidas
+        float[][] chordArpNotes = new float[16][]
+        {
+            new float[] { C3, G3, E4, C4 }, // C
+            new float[] { G2 * 2f, D3, B3, G3 }, // G
+            new float[] { A2 * 2f, E3, C4, A3 }, // Am
+            new float[] { F2 * 2f, C3, A3, F3 }, // F
+            new float[] { C3, G3, E4, C4 }, // C
+            new float[] { E2 * 2f, B2 * 2f, G3, E3 }, // Em
+            new float[] { F2 * 2f, C3, A3, F3 }, // F
+            new float[] { G2 * 2f, D3, B3, F3 }, // G7
+            new float[] { A2 * 2f, E3, C4, A3 }, // Am
+            new float[] { E2 * 2f, B2 * 2f, G3, E3 }, // Em
+            new float[] { F2 * 2f, C3, A3, F3 }, // F
+            new float[] { C3, G3, E4, C4 }, // C
+            new float[] { D3, A3, F4, C4 }, // Dm7
+            new float[] { E3, B3, G4, D4 }, // Em7
+            new float[] { F2 * 2f, C3, A3, F4 }, // F
+            new float[] { G2 * 2f, D3, B3, G4 }  // G
+        };
+
+        // Melodia cantante de Kalimba (Thumb Piano com chime de sino):
+        // (compasso, tempo no compasso [0..4 em batidas], nota)
+        (int bar, float beat, float freq)[] melodyNotes = new (int, float, float)[]
+        {
+            // Parte A (Luz solar acolhedora)
+            (0, 0.0f, E5), (0, 1.5f, G5), (0, 2.5f, A5), (0, 3.5f, G5),
+            (1, 0.0f, D5), (1, 1.5f, E5), (1, 2.5f, D5),
+            (2, 0.0f, C5), (2, 1.0f, E5), (2, 2.0f, D5), (2, 3.0f, C5),
+            (3, 0.0f, D5), (3, 1.5f, C5), (3, 2.5f, A4), (3, 3.25f, C5),
+
+            // Parte B (Curiosidade & Exploração tropical)
+            (4, 0.0f, E5), (4, 1.0f, G5), (4, 2.0f, C6), (4, 3.0f, D6),
+            (5, 0.0f, B5), (5, 1.5f, G5), (5, 2.5f, E5),
+            (6, 0.0f, A5), (6, 1.0f, C6), (6, 2.0f, A5), (6, 3.0f, G5),
+            (7, 0.0f, F5), (7, 1.0f, E5), (7, 2.0f, D5), (7, 3.0f, G5),
+
+            // Parte C (Aconchego contemplativo da ilha)
+            (8, 0.0f, C5), (8, 1.0f, D5), (8, 2.0f, E5), (8, 3.0f, G5),
+            (9, 0.0f, G5), (9, 1.5f, E5), (9, 2.5f, B4), (9, 3.0f, C5),
+            (10, 0.0f, A4), (10, 1.0f, C5), (10, 2.0f, E5), (10, 3.0f, D5),
+            (11, 0.0f, C5), (11, 1.5f, G4), (11, 2.5f, C5),
+
+            // Parte D (Resolução e volta fluida ao início)
+            (12, 0.0f, D5), (12, 1.0f, F5), (12, 2.0f, A5), (12, 3.0f, G5),
+            (13, 0.0f, E5), (13, 1.0f, G5), (13, 2.0f, B5), (13, 3.0f, C6),
+            (14, 0.0f, D6), (14, 1.0f, C6), (14, 2.0f, A5), (14, 3.0f, F5),
+            (15, 0.0f, G5), (15, 1.0f, D5), (15, 2.0f, E5), (15, 3.0f, D5)
+        };
+
+        // Renderiza as camadas sonoras combinadas
+        for (int i = 0; i < totalSamples; i++)
+        {
+            float t = (float)i / sampleRate;
+            int currentBar = Mathf.Clamp((int)(t / barDuration), 0, totalBars - 1);
+            float barTime = t - (currentBar * barDuration);
+
+            float sampleMix = 0f;
+
+            // 1. Camada de Contrabaixo Acústico Suave (bate no tempo 0 e tempo 2.0)
+            float bassTime1 = barTime;
+            float bassTime2 = barTime - (beatDuration * 2f);
+            float bassEnv1 = Mathf.Exp(-bassTime1 * 2.2f) * (1f - Mathf.Exp(-bassTime1 * 80f));
+            float bassFreq = chordRootsBass[currentBar];
+            float bass1 = (Mathf.Sin(2f * Mathf.PI * bassFreq * t) + 0.18f * Mathf.Sin(4f * Mathf.PI * bassFreq * t)) * bassEnv1;
+            float bass2 = 0f;
+            if (bassTime2 >= 0f)
+            {
+                float bassEnv2 = Mathf.Exp(-bassTime2 * 2.5f) * (1f - Mathf.Exp(-bassTime2 * 80f));
+                bass2 = (Mathf.Sin(2f * Mathf.PI * bassFreq * 1.5f * t) + 0.15f * Mathf.Sin(4f * Mathf.PI * bassFreq * t)) * bassEnv2 * 0.7f;
+            }
+            sampleMix += (bass1 + bass2) * 0.28f;
+
+            // 2. Camada de Dedilhado de Ukulele / Violão (8 notas por compasso, colcheias)
+            float eighthDuration = beatDuration * 0.5f;
+            int eighthIdx = Mathf.Clamp((int)(barTime / eighthDuration), 0, 7);
+            float noteTimeArp = barTime - (eighthIdx * eighthDuration);
+            float[] arpNotes = chordArpNotes[currentBar];
+            float arpFreq = arpNotes[eighthIdx % arpNotes.Length];
+            float arpEnv = Mathf.Exp(-noteTimeArp * 7.2f) * (1f - Mathf.Exp(-noteTimeArp * 180f));
+            float arpWave = (Mathf.Sin(2f * Mathf.PI * arpFreq * t) + 0.25f * Mathf.Sin(4f * Mathf.PI * arpFreq * t) + 0.08f * Mathf.Sin(6f * Mathf.PI * arpFreq * t)) * arpEnv;
+            sampleMix += arpWave * 0.18f;
+
+            musicData[i] = sampleMix;
+        }
+
+        // 3. Aplica a melodia da Kalimba por cima com timbres de sino ressonante
+        for (int m = 0; m < melodyNotes.Length; m++)
+        {
+            var note = melodyNotes[m];
+            float noteStartTime = (note.bar * barDuration) + (note.beat * beatDuration);
+            int startSample = (int)(noteStartTime * sampleRate);
+            int noteDurationSamples = (int)(sampleRate * (beatDuration * 2.2f));
+
+            for (int s = 0; s < noteDurationSamples; s++)
+            {
+                int sampleIdx = startSample + s;
+                if (sampleIdx >= totalSamples) break;
+
+                float tNote = (float)s / sampleRate;
+                float tGlobal = (float)sampleIdx / sampleRate;
+
+                // Timbre rico de Kalimba tropical: fundamental + oitava + harmônico ímpar + toque de sino
+                float kEnvelope = Mathf.Exp(-tNote * 3.6f) * (1f - Mathf.Exp(-tNote * 280f));
+                float kSound = (
+                    Mathf.Sin(2f * Mathf.PI * note.freq * tGlobal) * 1.0f +
+                    Mathf.Sin(4f * Mathf.PI * note.freq * tGlobal) * 0.38f +
+                    Mathf.Sin(6f * Mathf.PI * note.freq * tGlobal) * 0.12f +
+                    Mathf.Sin(5.42f * 2f * Mathf.PI * note.freq * tGlobal) * 0.08f
+                ) * kEnvelope * 0.26f;
+
+                musicData[sampleIdx] += kSound;
+            }
+        }
+
+        // 4. Cross-fade suave de 0.8s nas bordas para loop contínuo infinito e sem estalo
+        int musicCrossfade = (int)(sampleRate * 0.8f);
+        for (int i = 0; i < musicCrossfade; i++)
+        {
+            float blend = (float)i / musicCrossfade;
+            int tailIdx = totalSamples - musicCrossfade + i;
+            float mixed = Mathf.Lerp(musicData[tailIdx], musicData[i], blend);
+            musicData[i] = mixed;
+            musicData[tailIdx] = mixed;
+        }
+
+        cozyMusicClip = AudioClip.Create("CozyIslandMelody", totalSamples, 1, sampleRate, false);
+        cozyMusicClip.SetData(musicData, 0);
     }
 
     // ==========================================

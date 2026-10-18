@@ -149,16 +149,21 @@
 ### 5.1. Componentes de Software (C#)
 | Script | Localização | Responsabilidade |
 | :--- | :--- | :--- |
-| **`PlayerController.cs`** | `Assets/Scripts/` | Leitura de controles, movimentação física via `CharacterController`, animações procedurais de passos/idle e teletransporte de respawn aquático. |
-| **`CameraFollow.cs`** | `Assets/Scripts/` | Perseguição suave da câmera em perspectiva isométrica com amortecimento (`SmoothDamp`). |
+| **`PlayerController.cs`** | `Assets/Scripts/` | Leitura de controles, movimentação física via `CharacterController`, animações procedurais de passos/idle, pulo ágil e respawn aquático. |
+| **`CameraFollow.cs`** | `Assets/Scripts/` | Perseguição suave da câmera em perspectiva isométrica (`SmoothDamp`) e órbita panorâmica 360° no menu inicial. |
 | **`CollectibleItem.cs`** | `Assets/Scripts/` | Animação procedural de flutuação senoidal e rotação de moedas, além da detecção de coleta com gatilho. |
 | **`TreasureChest.cs`** | `Assets/Scripts/` | Controle de estados do baú, corrotina de rotação da tampa com `SmoothStep`, disparo da luz dourada e sistema de partículas. |
-| **`IslandGameManager.cs`** | `Assets/Scripts/` | Singleton de gerenciamento do estado da partida, contagem de moedas, cronômetro, sintetizador de áudio procedural e desenho do HUD/vitória via `OnGUI`. |
-| **`IslandSceneBuilder.cs`** | `Assets/Editor/` | Ferramenta de automação no Editor Unity para sincronização de modelos 3D, materiais, colisores e reconstrução da cena em 1 clique. |
+| **`WaterShorelineFoam.cs`** | `Assets/Scripts/` | Animação da espuma costeira na arrebentação das praias e pedras com respiração física de maré e variação suave de opacidade. |
+| **`IslandAtmosphereManager.cs`** | `Assets/Scripts/` | Gerenciamento do ciclo solar (Dia vs. Pôr do Sol Dourado) com interpolação de luzes, cores ambientais e pós-processamento URP. |
+| **`IslandGameManager.cs`** | `Assets/Scripts/` | Singleton de gerenciamento do estado da partida, contagem de moedas, cronômetro, sintetizador da trilha sonora aconchegante (`CozyIslandMelody`) e HUD/menus via `OnGUI`. |
+| **`IslandSceneBuilder.cs`** | `Assets/Editor/` | Ferramenta de automação no Editor Unity para montagem do arquipélago, anéis de espuma costeira, materiais URP e configuração de Volume de pós-processamento em 1 clique. |
 
-### 5.2. Áudio Procedural em Tempo Real
-O projeto não depende de arquivos de áudio externos (`.wav`/`.mp3`), gerando ondas sonoras via código matemático em tempo de execução:
+### 5.2. Áudio e Música Procedural em Tempo Real
+O projeto não depende de arquivos de áudio externos (`.wav`/`.mp3`), sintetizando todo o universo sonoro via código matemático em tempo de execução:
+* **Trilha Sonora Tropical Aconchegante (`CozyIslandMelody`):** Melodia original em 16 compassos a 84 BPM (~45.7s) composta por Kalimba (Thumb Piano com toque de sino), dedilhado de Ukulele/Violão em colcheias e contrabaixo acústico suave, executada em loop contínuo e sem costuras (*cross-fade*).
+* **Áudio Ambiente de Mar & Brisa:** Ondas senoidais e ruído branco filtrado por passa-baixas dinâmico simulando o ir e vir das ondas e vento costeiro.
 * **Som de Moeda:** Arpeggio agudo de duas frequências (nota B5 a 987.77 Hz seguida de E6 a 1318.51 Hz) com decaimento suave em 0.22 segundos.
+* **Efeitos de Pulo e Aterrissagem:** Whoosh ascendente e leve impacto com atrito de areia.
 * **Fanfarra de Vitória:** Acorde triunfante ascendente em 4 notas (C5 -> E5 -> G5 -> C6) sintetizado com decaimento exponencial ao abrir o baú.
 
 ### 5.3. Pipeline Blender 3D + Unity via MCP

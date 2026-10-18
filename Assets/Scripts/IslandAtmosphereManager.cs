@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -30,6 +32,13 @@ public class IslandAtmosphereManager : MonoBehaviour
     public Light sunLight;
     public Light lighthouseLight;
     public Light campfireLight;
+
+    [Header("Pós-Processamento URP (Volume Global)")]
+    public Volume globalVolume;
+    private Bloom postBloom;
+    private ColorAdjustments postColorAdj;
+    private WhiteBalance postWhiteBalance;
+    private Vignette postVignette;
 
     [Header("Configurações: Dia Ensolarado (☀️)")]
     public Vector3 daySunEuler = new Vector3(50f, -30f, 0f);
@@ -111,6 +120,19 @@ public class IslandAtmosphereManager : MonoBehaviour
         {
             GameObject fireObj = GameObject.Find("CampfireLight");
             if (fireObj != null) campfireLight = fireObj.GetComponent<Light>();
+        }
+
+        // 4. Busca o Volume de Pós-Processamento Global da Cena
+        if (globalVolume == null)
+        {
+            globalVolume = FindAnyObjectByType<Volume>();
+        }
+        if (globalVolume != null && globalVolume.sharedProfile != null)
+        {
+            globalVolume.sharedProfile.TryGet(out postBloom);
+            globalVolume.sharedProfile.TryGet(out postColorAdj);
+            globalVolume.sharedProfile.TryGet(out postWhiteBalance);
+            globalVolume.sharedProfile.TryGet(out postVignette);
         }
     }
 
@@ -215,6 +237,32 @@ public class IslandAtmosphereManager : MonoBehaviour
         {
             campfireLight.intensity = Mathf.Lerp(dayCampfireIntensity, sunsetCampfireIntensity, t);
             campfireLight.range = Mathf.Lerp(9f, 13f, t);
+        }
+
+        // Pós-Processamento URP Dinâmico (Luz e Cor Cinematográfica)
+        if (postBloom != null)
+        {
+            postBloom.intensity.value = Mathf.Lerp(0.85f, 1.45f, t);
+            postBloom.threshold.value = Mathf.Lerp(1.05f, 0.92f, t);
+            postBloom.tint.value = Color.Lerp(new Color(1.0f, 0.94f, 0.82f), new Color(1.0f, 0.72f, 0.38f), t);
+        }
+
+        if (postColorAdj != null)
+        {
+            postColorAdj.colorFilter.value = Color.Lerp(new Color(1.0f, 0.98f, 0.94f), new Color(1.0f, 0.75f, 0.52f), t);
+            postColorAdj.saturation.value = Mathf.Lerp(18f, 28f, t);
+            postColorAdj.contrast.value = Mathf.Lerp(14f, 19f, t);
+            postColorAdj.postExposure.value = Mathf.Lerp(0.22f, 0.28f, t);
+        }
+
+        if (postWhiteBalance != null)
+        {
+            postWhiteBalance.temperature.value = Mathf.Lerp(8f, 32f, t);
+        }
+
+        if (postVignette != null)
+        {
+            postVignette.intensity.value = Mathf.Lerp(0.20f, 0.28f, t);
         }
     }
 
