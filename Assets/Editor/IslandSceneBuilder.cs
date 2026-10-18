@@ -26,16 +26,24 @@ public static class IslandSceneBuilder
             }
             else
             {
+                // Verifica se o baú precisa ser atualizado
                 GameObject chestObj = GameObject.Find("BauDoTesouro");
                 if (chestObj != null)
                 {
                     TreasureChest tc = chestObj.GetComponent<TreasureChest>();
-                    // Atualiza automaticamente se tiver o ângulo antigo (-70) ou sem partículas
                     if (tc != null && (tc.targetOpenAngle > -80f || tc.openParticles == null))
                     {
                         Debug.Log("<color=cyan>[TinyIsland]</color> Atualizando Baú do Tesouro para a nova versão aprimorada...");
                         BuildChest();
                     }
+                }
+
+                // Verifica se o jogador ainda é a cápsula primitiva antiga
+                GameObject playerObj = GameObject.Find("Player");
+                if (playerObj != null && playerObj.GetComponent<MeshFilter>() != null)
+                {
+                    Debug.Log("<color=cyan>[TinyIsland]</color> Atualizando jogador para o novo modelo de Explorador 3D...");
+                    BuildPlayer();
                 }
             }
         };
@@ -93,42 +101,8 @@ public static class IslandSceneBuilder
         Object.DestroyImmediate(grassTop.GetComponent<Collider>());
         grassTop.AddComponent<MeshCollider>();
 
-        // 7. Cria o Jogador (Player)
-        GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        player.name = "Player";
-        player.transform.position = new Vector3(0, 1.5f, 0);
-        player.transform.localScale = Vector3.one;
-        player.GetComponent<Renderer>().sharedMaterial = matPlayer;
-        player.tag = "Player";
-
-        // Remove o CapsuleCollider comum para usar o CharacterController que é muito melhor para movimentação
-        Object.DestroyImmediate(player.GetComponent<CapsuleCollider>());
-        CharacterController cc = player.AddComponent<CharacterController>();
-        cc.center = new Vector3(0, 0, 0);
-        cc.height = 2f;
-        cc.radius = 0.5f;
-
-        // Adiciona o script de movimentação
-        PlayerController pc = player.AddComponent<PlayerController>();
-        pc.moveSpeed = 7f;
-        pc.rotationSpeed = 14f;
-
-        // 8. Configura a Câmera Principal
-        Camera mainCam = Camera.main;
-        if (mainCam != null)
-        {
-            CameraFollow camFollow = mainCam.GetComponent<CameraFollow>();
-            if (camFollow == null)
-            {
-                camFollow = mainCam.gameObject.AddComponent<CameraFollow>();
-            }
-            camFollow.target = player.transform;
-            camFollow.offset = new Vector3(0, 10f, -9f);
-            camFollow.smoothTime = 0.15f;
-
-            mainCam.transform.position = player.transform.position + camFollow.offset;
-            mainCam.transform.LookAt(player.transform.position + Vector3.up);
-        }
+        // 7. Cria o Jogador (Pequeno Explorador Tropical 3D com animações procedurais)
+        BuildPlayer();
 
         // 9. Cria o Gerenciador da Ilha
         GameObject gmObj = new GameObject("GameManager");
@@ -350,6 +324,92 @@ public static class IslandSceneBuilder
         EditorSceneManager.SaveOpenScenes();
         Debug.Log("<color=green><b>[TinyIsland]</b></color> Baú do Tesouro atualizado com sucesso com laterais sólidas, gemas e efeitos!");
         return chestObj;
+    }
+
+    [MenuItem("TinyIsland/🚶 Atualizar Jogador (Explorador)")]
+    public static GameObject BuildPlayer()
+    {
+        CleanUpOldObjects("Player");
+
+        // Materiais do pequeno explorador tropical
+        Material matSkin = GetOrCreateMaterial("Assets/Materials/M_PlayerSkin.mat", new Color(0.96f, 0.78f, 0.64f), 0f, 0.4f);
+        Material matShirt = GetOrCreateMaterial("Assets/Materials/M_PlayerShirt.mat", new Color(0.96f, 0.44f, 0.18f), 0f, 0.3f);
+        Material matVest = GetOrCreateMaterial("Assets/Materials/M_PlayerVest.mat", new Color(0.78f, 0.68f, 0.48f), 0f, 0.3f);
+        Material matShorts = GetOrCreateMaterial("Assets/Materials/M_PlayerShorts.mat", new Color(0.22f, 0.32f, 0.50f), 0f, 0.3f);
+        Material matBoots = GetOrCreateMaterial("Assets/Materials/M_PlayerBoots.mat", new Color(0.30f, 0.16f, 0.08f), 0f, 0.4f);
+        Material matHat = GetOrCreateMaterial("Assets/Materials/M_PlayerHat.mat", new Color(0.86f, 0.78f, 0.58f), 0f, 0.35f);
+        Material matLeather = GetOrCreateMaterial("Assets/Materials/M_PlayerLeather.mat", new Color(0.24f, 0.12f, 0.05f), 0f, 0.5f);
+        Material matHair = GetOrCreateMaterial("Assets/Materials/M_PlayerHair.mat", new Color(0.22f, 0.12f, 0.06f), 0f, 0.3f);
+        Material matEyes = GetOrCreateMaterial("Assets/Materials/M_PlayerEyes.mat", new Color(0.10f, 0.10f, 0.12f), 0f, 0.8f);
+        Material matBlush = GetOrCreateMaterial("Assets/Materials/M_PlayerBlush.mat", new Color(0.98f, 0.55f, 0.55f), 0f, 0.2f);
+        Material matWhite = GetOrCreateMaterial("Assets/Materials/M_PlayerWhite.mat", new Color(1.0f, 1.0f, 1.0f), 0f, 0.5f);
+        Material matBackpack = GetOrCreateMaterial("Assets/Materials/M_PlayerBackpack.mat", new Color(0.42f, 0.22f, 0.10f), 0f, 0.4f);
+        Material matBedroll = GetOrCreateMaterial("Assets/Materials/M_PlayerBedroll.mat", new Color(0.25f, 0.55f, 0.40f), 0f, 0.3f);
+        Material matGold = GetOrCreateMaterial("Assets/Materials/M_PlayerGold.mat", new Color(1.0f, 0.82f, 0.15f), 0.95f, 0.85f);
+
+        Material[] playerMultiMats = new Material[]
+        {
+            matSkin, matShirt, matVest, matShorts, matBoots, matHat,
+            matLeather, matHair, matEyes, matBlush, matWhite,
+            matBackpack, matBedroll, matGold
+        };
+
+        GameObject playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/PlayerExplorer.fbx");
+        GameObject playerObj;
+        if (playerPrefab != null)
+        {
+            playerObj = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
+            playerObj.name = "Player";
+            playerObj.tag = "Player";
+            playerObj.transform.position = new Vector3(0f, 0.46f, 0f);
+            playerObj.transform.rotation = Quaternion.identity;
+            playerObj.transform.localScale = Vector3.one;
+
+            Renderer[] renderers = playerObj.GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renderers)
+            {
+                r.sharedMaterials = playerMultiMats;
+            }
+        }
+        else
+        {
+            playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            playerObj.name = "Player";
+            playerObj.tag = "Player";
+            playerObj.transform.position = new Vector3(0f, 1.5f, 0f);
+        }
+
+        // Configuração do CharacterController
+        CharacterController cc = playerObj.GetComponent<CharacterController>();
+        if (cc == null) cc = playerObj.AddComponent<CharacterController>();
+        cc.center = new Vector3(0f, 0.74f, 0f);
+        cc.height = 1.48f;
+        cc.radius = 0.38f;
+
+        // Configuração do PlayerController e animações procedurais
+        PlayerController pc = playerObj.GetComponent<PlayerController>();
+        if (pc == null) pc = playerObj.AddComponent<PlayerController>();
+        pc.moveSpeed = 7f;
+        pc.rotationSpeed = 14f;
+        pc.FindBodyParts();
+
+        // Configuração da Câmera Principal
+        Camera mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            CameraFollow camFollow = mainCam.GetComponent<CameraFollow>();
+            if (camFollow == null) camFollow = mainCam.gameObject.AddComponent<CameraFollow>();
+            camFollow.target = playerObj.transform;
+            camFollow.offset = new Vector3(0f, 6.2f, -5.5f);
+            camFollow.smoothTime = 0.15f;
+            mainCam.transform.position = playerObj.transform.position + camFollow.offset;
+            mainCam.transform.LookAt(playerObj.transform.position + Vector3.up * 0.8f);
+        }
+
+        EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("<color=green><b>[TinyIsland]</b></color> Pequeno Explorador Tropical 3D instanciado e configurado com sucesso!");
+        return playerObj;
     }
 
     private static Material GetOrCreateMaterial(string path, Color color, float metallic = 0f, float smoothness = 0.5f)

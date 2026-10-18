@@ -20,12 +20,51 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Força da gravidade quando o jogador estiver no ar")]
     public float gravity = -20f;
 
+    [Header("Partes do Corpo (Animação Procedural)")]
+    public Transform torsoTransform;
+    public Transform headTransform;
+    public Transform armLTransform;
+    public Transform armRTransform;
+    public Transform legLTransform;
+    public Transform legRTransform;
+
+    [Header("Parâmetros da Caminhada")]
+    public float walkAnimSpeed = 14f;
+    public float legSwingAngle = 32f;
+    public float armSwingAngle = 26f;
+    public float bobAmount = 0.035f;
+
     private CharacterController controller;
     private Vector3 verticalVelocity;
+    private Vector3 initialTorsoPos;
+    private float animTimer = 0f;
+    private float idleTimer = 0f;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+    }
+
+    void Start()
+    {
+        FindBodyParts();
+        if (torsoTransform != null)
+        {
+            initialTorsoPos = torsoTransform.localPosition;
+        }
+    }
+
+    public void FindBodyParts()
+    {
+        if (torsoTransform == null) torsoTransform = transform.Find("Player_Torso");
+        if (torsoTransform != null)
+        {
+            if (headTransform == null) headTransform = torsoTransform.Find("Player_Head");
+            if (armLTransform == null) armLTransform = torsoTransform.Find("Player_Arm_L");
+            if (armRTransform == null) armRTransform = torsoTransform.Find("Player_Arm_R");
+            if (legLTransform == null) legLTransform = torsoTransform.Find("Player_Leg_L");
+            if (legRTransform == null) legRTransform = torsoTransform.Find("Player_Leg_R");
+        }
     }
 
     void Update()
@@ -56,6 +95,9 @@ public class PlayerController : MonoBehaviour
         Vector3 finalMove = (moveDirection * moveSpeed) + verticalVelocity;
         controller.Move(finalMove * Time.deltaTime);
 
+        // Animação procedural de caminhada e respiração ociosa
+        AnimateCharacter(moveDirection.magnitude);
+
         // Se o jogador cair da ilha no mar (abaixo de Y = -1), respawna suavemente no centro!
         if (transform.position.y < -1f)
         {
@@ -63,6 +105,46 @@ public class PlayerController : MonoBehaviour
             transform.position = new Vector3(0f, 1.5f, 0f);
             verticalVelocity = Vector3.zero;
             controller.enabled = true;
+        }
+    }
+
+    private void AnimateCharacter(float inputMagnitude)
+    {
+        if (torsoTransform == null && legLTransform == null) return;
+
+        bool isMoving = inputMagnitude > 0.1f && controller.isGrounded;
+
+        if (isMoving)
+        {
+            animTimer += Time.deltaTime * walkAnimSpeed;
+            float legAngle = Mathf.Sin(animTimer) * legSwingAngle;
+            float armAngle = Mathf.Sin(animTimer) * armSwingAngle;
+
+            if (legLTransform != null) legLTransform.localRotation = Quaternion.Euler(legAngle, 0, 0);
+            if (legRTransform != null) legRTransform.localRotation = Quaternion.Euler(-legAngle, 0, 0);
+            if (armLTransform != null) armLTransform.localRotation = Quaternion.Euler(-armAngle, 0, 0);
+            if (armRTransform != null) armRTransform.localRotation = Quaternion.Euler(armAngle, 0, 0);
+
+            // Bobbing vertical do corpo ao correr
+            if (torsoTransform != null)
+            {
+                float bob = Mathf.Abs(Mathf.Sin(animTimer)) * bobAmount;
+                torsoTransform.localPosition = initialTorsoPos + new Vector3(0, bob, 0);
+            }
+        }
+        else
+        {
+            // Respiração suave quando parado (idle)
+            idleTimer += Time.deltaTime * 3f;
+            float breath = Mathf.Sin(idleTimer) * 0.008f;
+            if (torsoTransform != null)
+            {
+                torsoTransform.localPosition = Vector3.Lerp(torsoTransform.localPosition, initialTorsoPos + new Vector3(0, breath, 0), Time.deltaTime * 6f);
+            }
+            if (legLTransform != null) legLTransform.localRotation = Quaternion.Slerp(legLTransform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
+            if (legRTransform != null) legRTransform.localRotation = Quaternion.Slerp(legRTransform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
+            if (armLTransform != null) armLTransform.localRotation = Quaternion.Slerp(armLTransform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
+            if (armRTransform != null) armRTransform.localRotation = Quaternion.Slerp(armRTransform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
         }
     }
 

@@ -11,7 +11,7 @@ public class CameraFollow : MonoBehaviour
 
     [Header("Posicionamento Isométrico")]
     [Tooltip("Distância e altura da câmera em relação ao jogador")]
-    public Vector3 offset = new Vector3(0f, 9f, -8f);
+    public Vector3 offset = new Vector3(0f, 6.2f, -5.5f);
 
     [Tooltip("Suavidade da perseguição (quanto menor, mais rápida)")]
     public float smoothTime = 0.2f;
