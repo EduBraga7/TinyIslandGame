@@ -497,6 +497,7 @@ public static class IslandSceneBuilder
         GameObject gmObj = new GameObject("GameManager");
         IslandGameManager gm = gmObj.AddComponent<IslandGameManager>();
         gm.targetCoins = coinLocations.Length;
+        gmObj.AddComponent<IslandAtmosphereManager>();
 
         // 12. Salva a cena
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());

@@ -58,9 +58,9 @@
 
 *Ideias de expansão quando as versões anteriores estiverem concluídas.*
 
-- [ ] **🕒 Iluminação de Pôr do Sol (*Golden Hour*):**
-  - Opção no menu ou tecla para alternar entre dia ensolarado e fim de tarde dourado.
-  - Tochas acendendo ao redor do baú do tesouro.
+- [x] **🕒 Iluminação de Pôr do Sol (*Golden Hour*):**
+  - Opção no menu inicial, menu de pausa e atalho `T` para alternar entre dia ensolarado e fim de tarde dourado.
+  - Transição cinematográfica suave com sol baixo, sombras longas, luz do Farol com rotação contínua do feixe pelo mar e fogueira radiante.
 - [ ] **📸 Modo Foto / Pause:**
   - Tecla `ESC` para pausar o cronômetro, ocultar o HUD e permitir mover a câmera livremente para capturar screenshots bonitas.
 - [ ] **📦 Build Executável & Publicação WebGL:**

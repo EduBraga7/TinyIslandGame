@@ -117,6 +117,12 @@ public class IslandGameManager : MonoBehaviour
 
         // Gera texturas suaves para interface minimalista
         GenerateProceduralTextures();
+
+        // Garante o gerenciador de atmosfera (Pôr do Sol Dourado / Golden Hour)
+        if (gameObject.GetComponent<IslandAtmosphereManager>() == null)
+        {
+            gameObject.AddComponent<IslandAtmosphereManager>();
+        }
     }
 
     void Start()
@@ -799,9 +805,9 @@ public class IslandGameManager : MonoBehaviour
 
         // Dimensões do Card Central do Menu
         float cardW = 380f;
-        float cardH = 340f;
+        float cardH = 375f;
         float cardX = (screenW - cardW) * 0.5f;
-        float cardY = (screenH - cardH) * 0.5f + 40f;
+        float cardY = (screenH - cardH) * 0.5f + 35f;
 
         // Posição do Título (acima do card, flutuando)
         float titleY = cardY - 105f + floatOffset;
@@ -820,16 +826,16 @@ public class IslandGameManager : MonoBehaviour
         // Botões do Menu Inicial
         float btnW = 280f;
         float btnX = cardX + (cardW - btnW) * 0.5f;
-        float startY = cardY + 30f;
+        float startY = cardY + 26f;
 
         // Botão 1: Começar Expedição (Dourado vibrante)
-        if (GUI.Button(new Rect(btnX, startY, btnW, 46), "COMEÇAR EXPEDIÇÃO", styleBtnGold))
+        if (GUI.Button(new Rect(btnX, startY, btnW, 44), "COMEÇAR EXPEDIÇÃO", styleBtnGold))
         {
             StartExpedition();
         }
 
         // Botão 2: Como Jogar (Slate elegante)
-        if (GUI.Button(new Rect(btnX, startY + 56, btnW, 38), "Como Jogar", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 52, btnW, 36), "Como Jogar", styleBtnSlate))
         {
             PlayMenuClickSound();
             showControlsModal = true;
@@ -837,23 +843,35 @@ public class IslandGameManager : MonoBehaviour
 
         // Botão 3: Som Ativado / Mudo
         string soundLabel = isAudioMuted ? "Som: Desativado" : "Som: Ativado";
-        if (GUI.Button(new Rect(btnX, startY + 104, btnW, 38), soundLabel, styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 96, btnW, 36), soundLabel, styleBtnSlate))
         {
             ToggleAudio();
         }
 
-        // Botão 4: Sair do Jogo
-        if (GUI.Button(new Rect(btnX, startY + 152, btnW, 38), "Sair do Jogo", styleBtnRed))
+        // Botão 4: Clima (Dia / Pôr do Sol Dourado)
+        string timeLabel = (IslandAtmosphereManager.Instance != null && IslandAtmosphereManager.Instance.currentTimeOfDay == IslandAtmosphereManager.TimeOfDayPreset.Sunset)
+            ? "Clima: Pôr do Sol Dourado"
+            : "Clima: Dia Ensolarado";
+        if (GUI.Button(new Rect(btnX, startY + 140, btnW, 36), timeLabel, styleBtnSlate))
+        {
+            if (IslandAtmosphereManager.Instance != null)
+            {
+                IslandAtmosphereManager.Instance.ToggleTimeOfDay();
+            }
+        }
+
+        // Botão 5: Sair do Jogo
+        if (GUI.Button(new Rect(btnX, startY + 184, btnW, 36), "Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
             showExitConfirmModal = true;
         }
 
         // Dica de teclado / controle
-        GUI.Label(new Rect(cardX, startY + 204, cardW, 22), "[ESPAÇO] Iniciar   |   [ESC] Sair", styleHint);
+        GUI.Label(new Rect(cardX, startY + 232, cardW, 22), "[ESPAÇO] Iniciar   |   [T] Pôr do Sol   |   [ESC] Sair", styleHint);
 
         // Créditos com o nome do criador
-        GUI.Label(new Rect(cardX, startY + 255, cardW, 24), "Tiny Island v1.1 - Feito por Edu Braga", styleCredits);
+        GUI.Label(new Rect(cardX, startY + 280, cardW, 24), "Tiny Island v1.3 - Feito por Edu Braga", styleCredits);
     }
 
     private void DrawControlsModal()
@@ -1004,14 +1022,15 @@ public class IslandGameManager : MonoBehaviour
             GUI.Label(new Rect(34, 52, 320, 24), "O Baú do Tesouro no Santuário abriu!", styleHudSub);
         }
 
-        // Indicador discreto de tempo no topo direito + atalho de pausa
+        // Indicador discreto de tempo no topo direito + atalho de clima e pausa
         GUIStyle timeCornerStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleRight
         };
-        timeCornerStyle.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
-        GUI.Label(new Rect(Screen.width - 240, 20, 215, 24), $"Tempo: {gameTimer:F1}s   |   [ESC] Menu", timeCornerStyle);
+        timeCornerStyle.normal.textColor = new Color(1f, 1f, 1f, 0.90f);
+        string timeIcon = (IslandAtmosphereManager.Instance != null && IslandAtmosphereManager.Instance.currentTimeOfDay == IslandAtmosphereManager.TimeOfDayPreset.Sunset) ? "🌅 Pôr do Sol" : "☀️ Dia";
+        GUI.Label(new Rect(Screen.width - 340, 20, 315, 24), $"Tempo: {gameTimer:F1}s   |   [T] {timeIcon}   |   [ESC] Menu", timeCornerStyle);
     }
 
     private void DrawPauseMenu()
@@ -1020,7 +1039,7 @@ public class IslandGameManager : MonoBehaviour
         float screenH = Screen.height;
 
         float panelW = 380f;
-        float panelH = 370f;
+        float panelH = 415f;
         float panelX = (screenW - panelW) * 0.5f;
         float panelY = (screenH - panelH) * 0.5f;
 
@@ -1044,43 +1063,55 @@ public class IslandGameManager : MonoBehaviour
             currentState = GameState.Playing;
         }
 
-        // 2. Alternar Som
+        // 2. Alternar Clima / Horário (Dia / Pôr do Sol)
+        string atmosphereLabel = (IslandAtmosphereManager.Instance != null && IslandAtmosphereManager.Instance.currentTimeOfDay == IslandAtmosphereManager.TimeOfDayPreset.Sunset)
+            ? "Mudar para Dia Ensolarado"
+            : "Mudar para Pôr do Sol";
+        if (GUI.Button(new Rect(btnX, startY + 46, btnW, 36), atmosphereLabel, styleBtnSlate))
+        {
+            if (IslandAtmosphereManager.Instance != null)
+            {
+                IslandAtmosphereManager.Instance.ToggleTimeOfDay();
+            }
+        }
+
+        // 3. Alternar Som
         string soundLabel = isAudioMuted ? "Som: Desativado" : "Som: Ativado";
-        if (GUI.Button(new Rect(btnX, startY + 48, btnW, 36), soundLabel, styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 88, btnW, 36), soundLabel, styleBtnSlate))
         {
             ToggleAudio();
         }
 
-        // 3. Guia de Controles
-        if (GUI.Button(new Rect(btnX, startY + 92, btnW, 36), "Controles & Objetivo", styleBtnSlate))
+        // 4. Guia de Controles
+        if (GUI.Button(new Rect(btnX, startY + 130, btnW, 36), "Controles & Objetivo", styleBtnSlate))
         {
             PlayMenuClickSound();
             showControlsModal = true;
         }
 
-        // 4. Reiniciar Ilha
-        if (GUI.Button(new Rect(btnX, startY + 136, btnW, 36), "Reiniciar Ilha", styleBtnSlate))
+        // 5. Reiniciar Ilha
+        if (GUI.Button(new Rect(btnX, startY + 172, btnW, 36), "Reiniciar Ilha", styleBtnSlate))
         {
             PlayMenuClickSound();
             RestartGame();
         }
 
-        // 5. Menu Principal
-        if (GUI.Button(new Rect(btnX, startY + 180, btnW, 36), "Menu Principal", styleBtnSlate))
+        // 6. Menu Principal
+        if (GUI.Button(new Rect(btnX, startY + 214, btnW, 36), "Menu Principal", styleBtnSlate))
         {
             PlayMenuClickSound();
             ReturnToMainMenu();
         }
 
-        // 6. Sair do Jogo
-        if (GUI.Button(new Rect(btnX, startY + 224, btnW, 36), "Sair do Jogo", styleBtnRed))
+        // 7. Sair do Jogo
+        if (GUI.Button(new Rect(btnX, startY + 256, btnW, 36), "Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
             showExitConfirmModal = true;
         }
 
         // Dica
-        GUI.Label(new Rect(panelX, startY + 272, panelW, 20), "Pressione [ESC] para retornar ao jogo", styleHint);
+        GUI.Label(new Rect(panelX, startY + 304, panelW, 20), "Pressione [ESC] para retornar ao jogo", styleHint);
     }
 
     private void DrawVictoryPanel()
