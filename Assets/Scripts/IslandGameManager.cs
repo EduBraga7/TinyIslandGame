@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /// <summary>
 /// Gerencia o estado completo do jogo (Menu Inicial, Transição, Gameplay, Pausa, Vitória)
@@ -103,8 +106,8 @@ public class IslandGameManager : MonoBehaviour
         {
             menuAlpha = Mathf.MoveTowards(menuAlpha, 1f, Time.deltaTime * 3.5f);
 
-            // Atalho de teclado para iniciar direto (Espaço ou Enter)
-            if (!showControlsModal && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)))
+            // Atalho de teclado / controle para iniciar direto (Espaço, Enter ou botão sul do controle)
+            if (!showControlsModal && WasStartHotkeyPressed())
             {
                 StartExpedition();
             }
@@ -119,8 +122,8 @@ public class IslandGameManager : MonoBehaviour
         {
             gameTimer += Time.deltaTime;
 
-            // Tecla ESC para abrir/fechar pausa
-            if (Input.GetKeyDown(KeyCode.Escape))
+            // Tecla ESC ou botão Start para pausar
+            if (WasPauseHotkeyPressed())
             {
                 currentState = GameState.Paused;
                 PlayMenuClickSound();
@@ -128,12 +131,55 @@ public class IslandGameManager : MonoBehaviour
         }
         else if (currentState == GameState.Paused)
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (WasPauseHotkeyPressed())
             {
                 currentState = GameState.Playing;
                 PlayMenuClickSound();
             }
         }
+    }
+
+    private bool WasStartHotkeyPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.spaceKey.wasPressedThisFrame ||
+                Keyboard.current.enterKey.wasPressedThisFrame ||
+                Keyboard.current.numpadEnterKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+        }
+        if (Gamepad.current != null)
+        {
+            if (Gamepad.current.buttonSouth.wasPressedThisFrame ||
+                Gamepad.current.startButton.wasPressedThisFrame)
+            {
+                return true;
+            }
+        }
+        return false;
+#else
+        return Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return);
+#endif
+    }
+
+    private bool WasPauseHotkeyPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+        if (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame)
+        {
+            return true;
+        }
+        return false;
+#else
+        return Input.GetKeyDown(KeyCode.Escape);
+#endif
     }
 
     public bool CanPlayerMove()

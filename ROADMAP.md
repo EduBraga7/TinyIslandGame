@@ -20,11 +20,13 @@
 
 *O objetivo desta versão é dar uma sensação mais completa de jogo finalizado logo ao abrir, além de expandir a mobilidade do explorador.*
 
-- [ ] **🎬 Tela de Menu Inicial (Start Screen):**
-  - Estado inicial antes de começar a partida com o título estilizado do jogo.
-  - Câmera em órbita suave (*slow rotate*) contemplando a ilha.
-  - Botão interativo **"Começar Expedição"** que faz a câmera transicionar suavemente para a posição de gameplay.
-  - Créditos com o seu nome como criador.
+- [x] **🎬 Tela de Menu Inicial (Start Screen):**
+  - Estado inicial antes de começar a partida com o título estilizado do jogo e animação de flutuação.
+  - Câmera em órbita suave (*slow rotate*) contemplando a ilha em 360°.
+  - Botão interativo **"Começar Expedição"** com transição cinematográfica fluida para o gameplay.
+  - Modal estilizado **"Como Jogar"** com controles e objetivos.
+  - Menu de Pausa minimalista (ESC) e atalhos rápidos via teclado/gamepad.
+  - Créditos com o nome de Edu Braga como criador.
 - [ ] **🦘 Mecânica e Animação de Pulo:**
   - Acionamento pela tecla `Espaço` (ou botão sul no controle / `A`).
   - Lógica no `PlayerController` permitindo pular sobre pequenas pedras da praia.

@@ -86,16 +86,27 @@
   * Uma fanfarra triunfante em acorde ascendente é sintetizada e executada.
 
 ### 3.5. Interface de Usuário (HUD & Menus)
+* **Tela de Menu Inicial (Start Screen):**
+  * Título dinâmico: `"🏝️ TINY ISLAND"` com animação suave de flutuação vertical senoidal e subtítulo `"Uma Micro-Aventura Tropical"`.
+  * Câmera em órbita suave panorâmica de 360° ao redor da ilha, destacando as águas tropicais, palmeiras, moedas douradas e o explorador em idle.
+  * Botão Primário: `"▶ COMEÇAR EXPEDIÇÃO"` (dourado luminoso com bordas arredondadas e hover dinâmico).
+  * Ao iniciar: dispara arpeggio ascendente acolhedor sintetizado, faz fade-out gradual da UI e transiciona a câmera suavemente (`Mathf.SmoothStep`) da órbita panorâmica para a visão isométrica de perseguição do explorador.
+  * Botão Secundário: `"📜 Como Jogar"` — abre janela modal com instruções de controles e objetivo sem precisar pausar a trilha.
+  * Atalho de conveniência: Início instantâneo ao pressionar `Espaço`, `Enter` ou botão sul do controle (`A`).
+  * Créditos autorais com o nome de Edu Braga no rodapé.
 * **HUD Superior Esquerdo:**
-  * Mostrador contínuo de moedas: `🪙 Moedas: X / 6`.
+  * Mostrador contínuo de moedas: `🪙 Moedas: X / 6` em painel de vidro escuro translúcido com acabamento arredondado.
   * Mensagem de orientação em jogo: `"Colete todas para abrir o Baú do Tesouro!"`.
   * Mensagem pós-abertura: `"✨ O Baú do Tesouro foi aberto!"`.
+  * Indicador de cronômetro e dica `[ESC] Pausa` no canto superior direito.
+* **Menu de Pausa (Pressione ESC ou Start no controle):**
+  * Congela a contagem de tempo e exibe card limpo: `"▶ Continuar"`, `"🔄 Reiniciar Ilha"` e `"🏠 Menu Principal"`.
 * **Painel de Conquista (Tela de Vitória):**
   * Surge centralizada na tela assim que o objetivo é cumprido.
   * Título: `🏆 PARABÉNS! 🏆`.
   * Mensagem: `"Você descobriu o Segredo de Tiny Island!"`.
   * Tempo de Expedição: exibe o tempo total da partida em segundos com uma casa decimal (ex: `Tempo de Expedição: 24.3 segundos`).
-  * Botão Interativo: `🔄 Jogar Novamente` — recarrega a cena atual instantaneamente para permitir um novo ciclo de jogo.
+  * Botões Interativos: `"🔄 Jogar Novamente"` e `"🏠 Menu Inicial"`.
 
 ---
 
