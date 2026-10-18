@@ -644,9 +644,9 @@ public class IslandGameManager : MonoBehaviour
         float titleY = cardY - 105f + floatOffset;
 
         // Sombra do título
-        GUI.Label(new Rect(cardX + 2, titleY + 2, cardW, 46), "🏝️ TINY ISLAND", styleTitleShadow);
+        GUI.Label(new Rect(cardX + 2, titleY + 2, cardW, 46), "TINY ISLAND", styleTitleShadow);
         // Título principal
-        GUI.Label(new Rect(cardX, titleY, cardW, 46), "🏝️ TINY ISLAND", styleTitle);
+        GUI.Label(new Rect(cardX, titleY, cardW, 46), "TINY ISLAND", styleTitle);
 
         // Subtítulo
         GUI.Label(new Rect(cardX, titleY + 48, cardW, 24), "Uma Micro-Aventura Tropical", styleSubtitle);
@@ -660,37 +660,37 @@ public class IslandGameManager : MonoBehaviour
         float startY = cardY + 30f;
 
         // Botão 1: Começar Expedição (Dourado vibrante)
-        if (GUI.Button(new Rect(btnX, startY, btnW, 46), "▶ COMEÇAR EXPEDIÇÃO", styleBtnGold))
+        if (GUI.Button(new Rect(btnX, startY, btnW, 46), "COMEÇAR EXPEDIÇÃO", styleBtnGold))
         {
             StartExpedition();
         }
 
         // Botão 2: Como Jogar (Slate elegante)
-        if (GUI.Button(new Rect(btnX, startY + 56, btnW, 38), "📜 Como Jogar", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 56, btnW, 38), "Como Jogar", styleBtnSlate))
         {
             PlayMenuClickSound();
             showControlsModal = true;
         }
 
         // Botão 3: Som Ativado / Mudo
-        string soundLabel = isAudioMuted ? "🔇 Som: Desativado" : "🔊 Som: Ativado";
+        string soundLabel = isAudioMuted ? "Som: Desativado" : "Som: Ativado";
         if (GUI.Button(new Rect(btnX, startY + 104, btnW, 38), soundLabel, styleBtnSlate))
         {
             ToggleAudio();
         }
 
         // Botão 4: Sair do Jogo
-        if (GUI.Button(new Rect(btnX, startY + 152, btnW, 38), "🚪 Sair do Jogo", styleBtnRed))
+        if (GUI.Button(new Rect(btnX, startY + 152, btnW, 38), "Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
             showExitConfirmModal = true;
         }
 
         // Dica de teclado / controle
-        GUI.Label(new Rect(cardX, startY + 204, cardW, 22), "💡 [ESPAÇO] Iniciar   •   [ESC] Sair", styleHint);
+        GUI.Label(new Rect(cardX, startY + 204, cardW, 22), "[ESPAÇO] Iniciar   |   [ESC] Sair", styleHint);
 
         // Créditos com o nome do criador
-        GUI.Label(new Rect(cardX, startY + 255, cardW, 24), "Tiny Island v1.1 • Feito por Edu Braga", styleCredits);
+        GUI.Label(new Rect(cardX, startY + 255, cardW, 24), "Tiny Island v1.1 - Feito por Edu Braga", styleCredits);
 
         // MODAIS
         if (showControlsModal)
@@ -721,7 +721,7 @@ public class IslandGameManager : MonoBehaviour
             fontSize = 22
         };
         modalHeader.normal.textColor = new Color(1f, 0.88f, 0.35f);
-        GUI.Label(new Rect(modalX, modalY + 20, modalW, 30), "📜 GUIA DO EXPLORADOR", modalHeader);
+        GUI.Label(new Rect(modalX, modalY + 20, modalW, 30), "GUIA DO EXPLORADOR", modalHeader);
 
         // Texto do Objetivo
         GUIStyle bodyBold = new GUIStyle(GUI.skin.label)
@@ -738,17 +738,17 @@ public class IslandGameManager : MonoBehaviour
         };
         bodyNormal.normal.textColor = Color.white;
 
-        GUI.Label(new Rect(modalX + 30, modalY + 65, modalW - 60, 22), "🧭 OBJETIVO:", bodyBold);
+        GUI.Label(new Rect(modalX + 30, modalY + 65, modalW - 60, 22), "OBJETIVO:", bodyBold);
         GUI.Label(new Rect(modalX + 30, modalY + 88, modalW - 60, 42),
             "Explore a praia e o platô para reunir as 6 moedas de ouro antigas e destrancar o lendário Baú do Tesouro!", bodyNormal);
 
         // Controles
-        GUI.Label(new Rect(modalX + 30, modalY + 140, modalW - 60, 22), "🎮 CONTROLES:", bodyBold);
+        GUI.Label(new Rect(modalX + 30, modalY + 140, modalW - 60, 22), "CONTROLES:", bodyBold);
         GUI.Label(new Rect(modalX + 30, modalY + 162, modalW - 60, 50),
-            "• Teclas W, A, S, D ou Setas: Caminhar pela ilha\n• Gamepad: Alavanca esquerda (Left Stick)\n• Sem estresse: Cair no mar não dá dano — você volta são e salvo!", bodyNormal);
+            "- Teclas W, A, S, D ou Setas: Caminhar pela ilha\n- Gamepad: Alavanca esquerda (Left Stick)\n- Sem estresse: Cair no mar não dá dano - você volta são e salvo!", bodyNormal);
 
         // Botão Fechar Modal
-        if (GUI.Button(new Rect(modalX + (modalW - 180) * 0.5f, modalY + modalH - 58, 180, 40), "✓ Entendido!", styleBtnGold))
+        if (GUI.Button(new Rect(modalX + (modalW - 180) * 0.5f, modalY + modalH - 58, 180, 40), "Entendido", styleBtnGold))
         {
             PlayMenuClickSound();
             showControlsModal = false;
@@ -769,7 +769,7 @@ public class IslandGameManager : MonoBehaviour
 
         GUIStyle exitHeader = new GUIStyle(styleTitle) { fontSize = 22 };
         exitHeader.normal.textColor = new Color(1f, 0.84f, 0.35f);
-        GUI.Label(new Rect(modalX, modalY + 22, modalW, 30), "🚪 SAIR DO JOGO", exitHeader);
+        GUI.Label(new Rect(modalX, modalY + 22, modalW, 30), "SAIR DO JOGO", exitHeader);
 
         GUIStyle confirmMsg = new GUIStyle(GUI.skin.label)
         {
@@ -785,12 +785,12 @@ public class IslandGameManager : MonoBehaviour
         float startX = modalX + (modalW - totalW) * 0.5f;
         float btnY = modalY + 120f;
 
-        if (GUI.Button(new Rect(startX, btnY, btnW, 42), "✓ Sim, Sair", styleBtnRed))
+        if (GUI.Button(new Rect(startX, btnY, btnW, 42), "Sim, Sair", styleBtnRed))
         {
             QuitGame();
         }
 
-        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 42), "✕ Cancelar", styleBtnSlate))
+        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 42), "Cancelar", styleBtnSlate))
         {
             PlayMenuClickSound();
             showExitConfirmModal = false;
@@ -803,7 +803,7 @@ public class IslandGameManager : MonoBehaviour
         int boxHeight = 65;
         GUI.Box(new Rect(20, 20, boxWidth, boxHeight), "", styleHudBox);
 
-        GUI.Label(new Rect(34, 26, 290, 26), $"🪙 Moedas: {totalItemsCollected} / {targetCoins}", styleHudCoins);
+        GUI.Label(new Rect(34, 26, 290, 26), $"Moedas: {totalItemsCollected} / {targetCoins}", styleHudCoins);
 
         if (!isVictory)
         {
@@ -813,7 +813,7 @@ public class IslandGameManager : MonoBehaviour
         else
         {
             styleHudSub.normal.textColor = new Color(0.3f, 1f, 0.4f);
-            GUI.Label(new Rect(34, 52, 290, 24), "✨ O Baú do Tesouro foi aberto!", styleHudSub);
+            GUI.Label(new Rect(34, 52, 290, 24), "O Baú do Tesouro foi aberto!", styleHudSub);
         }
 
         // Indicador discreto de tempo no topo direito + atalho de pausa
@@ -823,7 +823,7 @@ public class IslandGameManager : MonoBehaviour
             alignment = TextAnchor.MiddleRight
         };
         timeCornerStyle.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
-        GUI.Label(new Rect(Screen.width - 240, 20, 215, 24), $"⏱️ {gameTimer:F1}s   [ESC] Menu", timeCornerStyle);
+        GUI.Label(new Rect(Screen.width - 240, 20, 215, 24), $"Tempo: {gameTimer:F1}s   |   [ESC] Menu", timeCornerStyle);
     }
 
     private void DrawPauseMenu()
@@ -843,56 +843,56 @@ public class IslandGameManager : MonoBehaviour
             fontSize = 24
         };
         pauseHeader.normal.textColor = new Color(1f, 0.88f, 0.35f);
-        GUI.Label(new Rect(panelX, panelY + 22, panelW, 32), "⏸️ MENU DE PAUSA", pauseHeader);
+        GUI.Label(new Rect(panelX, panelY + 22, panelW, 32), "MENU DE PAUSA", pauseHeader);
 
         float btnW = 280f;
         float btnX = panelX + (panelW - btnW) * 0.5f;
         float startY = panelY + 68f;
 
         // 1. Continuar Expedição
-        if (GUI.Button(new Rect(btnX, startY, btnW, 40), "▶ Continuar Expedição", styleBtnGold))
+        if (GUI.Button(new Rect(btnX, startY, btnW, 40), "Continuar Expedição", styleBtnGold))
         {
             PlayMenuClickSound();
             currentState = GameState.Playing;
         }
 
         // 2. Alternar Som
-        string soundLabel = isAudioMuted ? "🔇 Som: Desativado" : "🔊 Som: Ativado";
+        string soundLabel = isAudioMuted ? "Som: Desativado" : "Som: Ativado";
         if (GUI.Button(new Rect(btnX, startY + 48, btnW, 36), soundLabel, styleBtnSlate))
         {
             ToggleAudio();
         }
 
         // 3. Guia de Controles
-        if (GUI.Button(new Rect(btnX, startY + 92, btnW, 36), "📜 Controles & Objetivo", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 92, btnW, 36), "Controles & Objetivo", styleBtnSlate))
         {
             PlayMenuClickSound();
             showControlsModal = true;
         }
 
         // 4. Reiniciar Ilha
-        if (GUI.Button(new Rect(btnX, startY + 136, btnW, 36), "🔄 Reiniciar Ilha", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 136, btnW, 36), "Reiniciar Ilha", styleBtnSlate))
         {
             PlayMenuClickSound();
             RestartGame();
         }
 
         // 5. Menu Principal
-        if (GUI.Button(new Rect(btnX, startY + 180, btnW, 36), "🏠 Menu Principal", styleBtnSlate))
+        if (GUI.Button(new Rect(btnX, startY + 180, btnW, 36), "Menu Principal", styleBtnSlate))
         {
             PlayMenuClickSound();
             ReturnToMainMenu();
         }
 
         // 6. Sair do Jogo
-        if (GUI.Button(new Rect(btnX, startY + 224, btnW, 36), "🚪 Sair do Jogo", styleBtnRed))
+        if (GUI.Button(new Rect(btnX, startY + 224, btnW, 36), "Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
             showExitConfirmModal = true;
         }
 
         // Dica
-        GUI.Label(new Rect(panelX, startY + 272, panelW, 20), "💡 Pressione [ESC] para retornar ao jogo", styleHint);
+        GUI.Label(new Rect(panelX, startY + 272, panelW, 20), "Pressione [ESC] para retornar ao jogo", styleHint);
 
         // Modais sobre o menu de pausa
         if (showControlsModal)
@@ -921,7 +921,7 @@ public class IslandGameManager : MonoBehaviour
             alignment = TextAnchor.MiddleCenter
         };
         titleStyle.normal.textColor = new Color(1f, 0.84f, 0f);
-        GUI.Label(new Rect(screenX, screenY + 20, panelW, 35), "🏆 PARABÉNS! 🏆", titleStyle);
+        GUI.Label(new Rect(screenX, screenY + 20, panelW, 35), "PARABÉNS!", titleStyle);
 
         GUIStyle msgStyle = new GUIStyle(GUI.skin.label)
         {
@@ -947,13 +947,13 @@ public class IslandGameManager : MonoBehaviour
         float startX = screenX + (panelW - totalBtnW) * 0.5f;
         float btnY = screenY + 130f;
 
-        if (GUI.Button(new Rect(startX, btnY, btnW, 44), "🔄 Jogar Novamente", styleBtnGold))
+        if (GUI.Button(new Rect(startX, btnY, btnW, 44), "Jogar Novamente", styleBtnGold))
         {
             PlayMenuClickSound();
             RestartGame();
         }
 
-        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 44), "🏠 Menu Inicial", styleBtnSlate))
+        if (GUI.Button(new Rect(startX + btnW + gap, btnY, btnW, 44), "Menu Inicial", styleBtnSlate))
         {
             PlayMenuClickSound();
             ReturnToMainMenu();
@@ -961,7 +961,7 @@ public class IslandGameManager : MonoBehaviour
 
         // Botão de Sair do Jogo na Vitória
         float quitW = 200f;
-        if (GUI.Button(new Rect(screenX + (panelW - quitW) * 0.5f, btnY + 54, quitW, 36), "🚪 Sair do Jogo", styleBtnRed))
+        if (GUI.Button(new Rect(screenX + (panelW - quitW) * 0.5f, btnY + 54, quitW, 36), "Sair do Jogo", styleBtnRed))
         {
             PlayMenuClickSound();
             showExitConfirmModal = true;
