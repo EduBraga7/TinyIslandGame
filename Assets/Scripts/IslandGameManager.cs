@@ -30,6 +30,7 @@ public class IslandGameManager : MonoBehaviour
     public bool isVictory = false;
     public string lastCollectedItemName = "";
     private float lastCollectDisplayTimer = 0f;
+    private static bool restartDirectlyToGame = false;
 
     [Header("Cronômetro")]
     public float gameTimer = 0f;
@@ -102,9 +103,22 @@ public class IslandGameManager : MonoBehaviour
 
     void Start()
     {
-        // Inicia no Menu Principal por padrão
-        currentState = GameState.MainMenu;
-        menuAlpha = 1f;
+        // Se foi clicado em "Jogar Novamente", inicia direto no gameplay!
+        if (restartDirectlyToGame)
+        {
+            restartDirectlyToGame = false;
+            currentState = GameState.Playing;
+            menuAlpha = 0f;
+            if (CameraFollow.Instance != null)
+            {
+                CameraFollow.Instance.mode = CameraFollow.CameraMode.GameplayFollow;
+            }
+        }
+        else
+        {
+            currentState = GameState.MainMenu;
+            menuAlpha = 1f;
+        }
 
         CollectibleItem[] allCoins = FindObjectsByType<CollectibleItem>();
         if (allCoins != null && allCoins.Length > 0)
@@ -254,6 +268,7 @@ public class IslandGameManager : MonoBehaviour
     {
         showControlsModal = false;
         showExitConfirmModal = false;
+        restartDirectlyToGame = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -261,6 +276,7 @@ public class IslandGameManager : MonoBehaviour
     {
         showControlsModal = false;
         showExitConfirmModal = false;
+        restartDirectlyToGame = true;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

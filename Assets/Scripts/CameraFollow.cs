@@ -65,6 +65,11 @@ public class CameraFollow : MonoBehaviour
             transform.position = CalculateOrbitPosition(currentOrbitAngle);
             transform.LookAt(orbitCenter + Vector3.up * 0.8f);
         }
+        else if (mode == CameraMode.GameplayFollow && target != null)
+        {
+            transform.position = target.position + offset;
+            transform.LookAt(target.position + Vector3.up * 1f);
+        }
     }
 
     void LateUpdate()
