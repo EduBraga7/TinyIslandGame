@@ -172,11 +172,7 @@ public static class IslandSceneBuilder
             lh.transform.localScale = Vector3.one * 1.15f;
 
             AssignMaterials(lh, new Material[] { matRock, matWhiteWall, matCoralRed, matIron, matGlowLight });
-
-            CapsuleCollider lhCol = lh.AddComponent<CapsuleCollider>();
-            lhCol.center = new Vector3(0f, 3.0f, 0f);
-            lhCol.radius = 1.25f;
-            lhCol.height = 6.2f;
+            SetupAccurateMeshColliders(lh);
 
             // Luz quente no topo do Farol
             GameObject lhLightObj = new GameObject("LighthouseBeaconLight");
@@ -201,11 +197,8 @@ public static class IslandSceneBuilder
             dock.transform.localScale = Vector3.one * 1.1f;
 
             AssignMaterials(dock, new Material[] { matWood, matWoodDark, matRope });
-
-            // Colisor plano nas tábuas do píer para caminhada suave
-            BoxCollider dockWalkCol = dock.AddComponent<BoxCollider>();
-            dockWalkCol.center = new Vector3(0f, 0.28f, 0f);
-            dockWalkCol.size = new Vector3(2.2f, 0.56f, 7.2f);
+            // Colisão física exata em todas as tábuas, vigas e em todos os postes laterais
+            SetupAccurateMeshColliders(dock);
         }
 
         // 7.3 Veleiro Tropical ancorado ao lado do Píer Sul
@@ -220,11 +213,8 @@ public static class IslandSceneBuilder
             boat.transform.localScale = Vector3.one * 1.15f;
 
             AssignMaterials(boat, new Material[] { matWood, matGold, matWhiteWall, matCoralRed });
-
-            // Colisor sólido no convés do barco para o jogador subir pulando
-            BoxCollider boatCol = boat.AddComponent<BoxCollider>();
-            boatCol.center = new Vector3(0f, 0.38f, 0f);
-            boatCol.size = new Vector3(2.1f, 0.76f, 4.4f);
+            // Colisão física exata no casco, convés, mastro, verga, vela e na bandeira
+            SetupAccurateMeshColliders(boat);
         }
 
         // 7.4 Ponte Arqueada de Madeira (conectando Ilha Principal X=13.5 à Ilhota do Santuário X=21.5)
@@ -239,9 +229,7 @@ public static class IslandSceneBuilder
             bridge.transform.localScale = new Vector3(1.18f, 1.0f, 1.05f);
 
             AssignMaterials(bridge, new Material[] { matWood, matWoodDark, matRope });
-
-            MeshCollider bridgeCol = bridge.AddComponent<MeshCollider>();
-            bridgeCol.convex = false;
+            SetupAccurateMeshColliders(bridge);
         }
 
         // 7.5 Acampamento do Explorador (Barraca + Fogueira + Troncos) no Platô Oeste
@@ -256,11 +244,8 @@ public static class IslandSceneBuilder
             camp.transform.localScale = Vector3.one * 1.1f;
 
             AssignMaterials(camp, new Material[] { matTentOrange, matWood, matRock, matFireEmber });
-
-            // Colisor na barraca
-            BoxCollider tentCol = camp.AddComponent<BoxCollider>();
-            tentCol.center = new Vector3(-1.6f, 0.7f, 0.8f);
-            tentCol.size = new Vector3(2.2f, 1.4f, 2.2f);
+            // Colisão física exata em toda a lona e paredes da barraca, nos troncos de sentar e nas pedras da fogueira
+            SetupAccurateMeshColliders(camp);
 
             // Luz quente da fogueira
             GameObject fireLightObj = new GameObject("CampfireLight");
@@ -304,9 +289,7 @@ public static class IslandSceneBuilder
             ruins.transform.localScale = Vector3.one * 1.15f;
 
             AssignMaterials(ruins, new Material[] { matRock, matGrassHill, matCrystal });
-
-            MeshCollider ruinsCol = ruins.AddComponent<MeshCollider>();
-            ruinsCol.convex = false;
+            SetupAccurateMeshColliders(ruins);
         }
 
         // =========================================================================
@@ -755,6 +738,26 @@ public static class IslandSceneBuilder
                     assigned[i] = mats[Mathf.Min(i, mats.Length - 1)];
                 }
                 r.sharedMaterials = assigned;
+            }
+        }
+    }
+
+    private static void SetupAccurateMeshColliders(GameObject obj)
+    {
+        Collider[] oldCols = obj.GetComponentsInChildren<Collider>();
+        foreach (Collider c in oldCols)
+        {
+            Object.DestroyImmediate(c);
+        }
+
+        MeshFilter[] filters = obj.GetComponentsInChildren<MeshFilter>();
+        foreach (MeshFilter mf in filters)
+        {
+            if (mf.sharedMesh != null)
+            {
+                MeshCollider mc = mf.gameObject.AddComponent<MeshCollider>();
+                mc.sharedMesh = mf.sharedMesh;
+                mc.convex = false;
             }
         }
     }
