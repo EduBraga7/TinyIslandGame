@@ -18,18 +18,19 @@
 
 **Tiny Island** é um protótipo de micro-aventura 3D desenvolvido no **Unity 6**, com modelos 3D autorais gerados proceduralmente no **Blender 5.2** através de uma esteira assistida por IA via **MCP (Model Context Protocol)**.
 
-O objetivo do jogador é explorar uma pequena ilha tropical isolada, apreciar o ambiente e encontrar as **6 Moedas Douradas Perdidas** para destrancar o lendário **Baú do Tesouro**.
+O objetivo do jogador é explorar um arquipélago tropical paradisíaco (com Farol, Píer, Veleiro ancorado, Acampamento e Ruínas Antigas), apreciar o ambiente e encontrar as **12 Moedas Douradas Perdidas** para destrancar o lendário **Baú do Tesouro**.
 
 ---
 
 ## 🎮 Mecânicas Principais
 
 * 🏃 **Movimentação Isométrica Fluida:** Controle em 8 direções (WASD / Setas / Gamepad) com aceleração e rotação suave na direção do movimento.
-* 🎥 **Câmera Cinemática de Terceira Pessoa:** Acompanhamento dinâmico suave (*SmoothDamp*) com inclinação em ângulo isométrico.
-* 🌴 **Assets 3D Estilizados (Low Poly):** Palmeiras tropicais curvas e moedas de ouro 3D com relevo modeladas diretamente via Blender MCP.
-* 🪙 **Coletáveis Interativos:** Moedas com animação matemática de rotação e flutuação contínua com detecção de contato por gatilho (*Trigger*).
+* 🦘 **Pulo Ágil com Coyote Time:** Permite saltar entre pedras da praia, subir no veleiro ancorado e explorar elevações com tolerância de pulo nas bordas.
+* 🎥 **Câmera Cinemática de Terceira Pessoa:** Acompanhamento dinâmico suave (*SmoothDamp*) com inclinação em ângulo isométrico e órbita contemplativa em 360° no menu.
+* 🌴 **Assets 3D Estilizados (Low Poly):** Palmeiras tropicais curvas, farol, píer, barco, acampamento, ruínas e moedas de ouro 3D com relevo modeladas diretamente via Blender MCP.
+* 🪙 **Coletáveis Interativos:** 12 Moedas com animação matemática de rotação e flutuação contínua com detecção de contato por gatilho (*Trigger*).
 * 🌊 **Salva-Vidas Aquático (Respawn):** Caso o personagem caia no mar ao redor da ilha, ele retorna suavemente para o centro da praia sem punição.
-* ⚡ **Construtor de Cena com 1 Clique:** Script de editor que gera o terreno, aplica materiais coloridos do URP, posiciona o jogador, a câmera e os itens automaticamente.
+* ⚡ **Construtor de Cena com 1 Clique:** Script de editor que gera o arquipélago, aplica materiais coloridos do URP, posiciona o jogador, a câmera e os itens automaticamente.
 
 ---
 
@@ -41,7 +42,9 @@ O objetivo do jogador é explorar uma pequena ilha tropical isolada, apreciar o 
 | **S / Seta Baixo** | Mover para trás (sul da ilha) |
 | **A / Seta Esquerda** | Mover para a esquerda (oeste da ilha) |
 | **D / Seta Direita** | Mover para a direita (leste da ilha) |
+| **Espaço / Botão A** | Pular (pedras, colinas e convés do barco) |
 | **Analógico Esquerdo** | Movimentação com controle / gamepad |
+| **ESC / Start** | Menu de Pausa, Guia de Controles e Opções |
 
 ---
 

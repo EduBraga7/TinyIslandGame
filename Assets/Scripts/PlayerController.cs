@@ -46,6 +46,7 @@ public class PlayerController : MonoBehaviour
     private float animTimer = 0f;
     private float idleTimer = 0f;
     private float groundedGraceTimer = 0f;
+    private bool wasAirborne = false;
 
     void Awake()
     {
@@ -97,6 +98,12 @@ public class PlayerController : MonoBehaviour
         // Coyote time para pulo responsivo em bordas e pedras
         if (controller.isGrounded)
         {
+            if (wasAirborne)
+            {
+                wasAirborne = false;
+                IslandGameManager.PlayLandSound();
+            }
+
             groundedGraceTimer = 0.15f;
             if (verticalVelocity.y < 0f)
             {
@@ -105,6 +112,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
+            wasAirborne = true;
             groundedGraceTimer -= Time.deltaTime;
         }
 
@@ -113,6 +121,8 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             groundedGraceTimer = 0f;
+            wasAirborne = true;
+            IslandGameManager.PlayJumpSound();
         }
 
         verticalVelocity.y += gravity * Time.deltaTime;

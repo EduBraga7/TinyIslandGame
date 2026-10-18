@@ -30,15 +30,16 @@
                             ▼
 ┌────────────────────────────────────────────────────────┐
 │                 EXPLORAÇÃO & COLETA                    │
-│   • Movimentação livre pela praia e platô              │
-│   • Coleta de 6 Moedas Douradas (som "plim!")          │
+│   • Movimentação livre pelo arquipélago e ilhotas      │
+│   • Pulo em pedras, conveses e encostas com tolerância │
+│   • Coleta de 12 Moedas Douradas (som "plim!")         │
 │   • Respawn seguro automático caso caia na água        │
 └───────────────────────────┬────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
 │                   VITÓRIA & REPLAY                     │
-│   • Abertura animada do Baú do Tesouro                 │
+│   • Abertura animada do Baú no Altar das Ruínas        │
 │   • Luz dourada, partículas festivas e fanfarra        │
 │   • Painel de vitória com tempo e botão de reiniciar   │
 └────────────────────────────────────────────────────────┘
@@ -48,26 +49,27 @@
 
 ## 3. Mecânicas de Jogo & Sistemas
 
-### 3.1. Movimentação e Controles
+### 3.1. Movimentação, Pulo e Controles
 * **Suporte de Entrada:** Compatível com o novo **Input System do Unity 6** e teclado tradicional/gamepad:
-  * **Teclado:** Teclas `W, A, S, D` ou `Setas Direcionais`.
-  * **Gamepad:** Alavanca analógica esquerda (`Left Stick`).
-* **Dinâmica de Movimento:**
+  * **Teclado:** Teclas `W, A, S, D` ou `Setas Direcionais` para mover; `Espaço` para pular.
+  * **Gamepad:** Alavanca analógica esquerda (`Left Stick`) para mover; Botão Sul (`A`) para pular.
+* **Dinâmica de Movimento & Pulo:**
   * Movimentação no plano X/Z com colisão física via `CharacterController`.
   * Rotação suave (*Slerp*) virando o explorador na direção em que se desloca.
-  * Gravidade contínua para manter os pés firmes nas elevações da ilha.
+  * Gravidade calibrada com suporte a pulo ágil (`jumpHeight = 1.65m`) e tolerância de borda (*Coyote Time* de 0.15s) para saltos responsivos sobre pedras da praia e obstáculos.
 * **Animação Procedural do Explorador:**
   * **Em Movimento:** Braços e pernas oscilam alternadamente através de senóides matemáticas, com leve salto vertical (*bobbing*) do tronco.
-  * **Parado (Idle):** Leve movimento de respiração senoidal no torso, com membros retornando suavemente à pose neutra.
+  * **Pulo no Ar:** Pose dinâmica e expressiva de salto com braços erguidos e pernas estendidas.
+  * **Parado (Idle):** Leve movimento de respiração senoidal no torso, com membros retornando suavemente à pose neutra via interpolação.
 
 ### 3.2. Sistema de Queda e Respawn Seguro
-* **Comportamento Real:** Se o jogador caminhar para fora dos limites da ilha e cair no oceano (coordenada `Y < -1.0`), o jogo executa um **respawn instantâneo**:
-  * O jogador é reposicionado imediatamente no ponto seguro central da ilha em `(0, 1.5, 0)`.
+* **Comportamento Real:** Se o jogador caminhar para fora dos limites da ilha e cair no oceano (coordenada `Y < -1.2`), o jogo executa um **respawn instantâneo**:
+  * O jogador é reposicionado imediatamente no ponto seguro central da ilha em `(0, 1.5, -2)`.
   * A velocidade de queda vertical é zerada.
   * **Sem Punição:** Não há perda de vidas, não há tela de *Game Over* e as moedas já coletadas permanecem salvas.
 
 ### 3.3. Itens Coletáveis (Moedas Antigas)
-* **Quantidade:** 6 moedas douradas espalhadas estrategicamente entre as margens da praia e o platô de grama.
+* **Quantidade:** 12 moedas douradas espalhadas estrategicamente pelo arquipélago (Píer Sul, Veleiro ancorado, Acampamento, Bosque Tropical, Travessia de Pedras, Ilhota do Recife, Colina Norte, Farol Tropical, Mirante, Ponte de Madeira e Santuário Antigo).
 * **Comportamento Visual:**
   * Rotação contínua no eixo vertical (90° por segundo).
   * Flutuação vertical oscilante procedural baseada em onda senoidal.
@@ -76,11 +78,11 @@
   * Ao ser tocada pelo explorador, a moeda é removida da cena, incrementa a pontuação no `IslandGameManager` e dispara o som procedural de coleta ("plim!").
 
 ### 3.4. Baú do Tesouro & Condição de Vitória
-* **Posição:** Platô elevado da ilha, visível como ponto de referência central.
+* **Posição:** Altar central do Santuário das Ruínas Antigas na Ilhota Leste.
 * **Composição:** Modelo 3D com madeira rústica, reforços de ferro, moedas douradas, barras de ouro e gemas lapidadas (rubis, esmeraldas e safiras).
 * **Mecânica de Abertura:**
-  * O baú permanece trancado até a coleta da **6ª moeda**.
-  * Ao atingir a 6ª moeda, a tampa rotaciona suavemente com interpolação `SmoothStep` até o ângulo de abertura (-100°).
+  * O baú permanece trancado até a coleta da **12ª moeda**.
+  * Ao atingir a 12ª moeda, a tampa rotaciona suavemente com interpolação `SmoothStep` até o ângulo de abertura (-100°).
   * Uma luz pontual dourada (`TreasureGlowLight`) acende de dentro do baú, iluminando a pilha de tesouro.
   * Um sistema de partículas (`ChestOpenParticles`) emite uma rajada cônica de partículas douradas comemorativas.
   * Uma fanfarra triunfante em acorde ascendente é sintetizada e executada.
@@ -97,7 +99,7 @@
   * Atalho de conveniência: Início instantâneo ao pressionar `Espaço`, `Enter` ou botão sul do controle (`A`). Pressionar `ESC` abre o diálogo de saída.
   * Créditos autorais com o nome de Edu Braga no rodapé.
 * **HUD Superior Esquerdo:**
-  * Mostrador contínuo de moedas: `🪙 Moedas: X / 6` em painel de vidro escuro translúcido com acabamento arredondado.
+  * Mostrador contínuo de moedas: `🪙 Moedas: X / 12` em painel de vidro escuro translúcido com acabamento arredondado.
   * Mensagem de orientação em jogo: `"Colete todas para abrir o Baú do Tesouro!"`.
   * Mensagem pós-abertura: `"✨ O Baú do Tesouro foi aberto!"`.
   * Indicador de cronômetro e dica `[ESC] Menu` no canto superior direito.
@@ -178,6 +180,6 @@ Todos os modelos 3D autorais foram gerados e calibrados no Blender via automaç�
    * Pressione o botão **Play (▶)** para iniciar a partida.
 2. **Controles:**
    * Use **W, A, S, D** ou **Setas** para caminhar.
-   * Colete as **6 moedas** espalhadas pela praia e platô.
+   * Colete as **12 moedas** espalhadas pelo arquipélago (farol, píer, barco, ruínas, colinas e recife).
    * Veja o baú se abrir e comemore a vitória com o tempo final de expedição!
 

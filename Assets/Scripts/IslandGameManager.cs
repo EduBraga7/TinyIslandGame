@@ -43,10 +43,14 @@ public class IslandGameManager : MonoBehaviour
 
     // Componente de Áudio para efeitos sonoros procedurais
     private static AudioSource audioSource;
+    private static AudioSource ambientAudioSource;
     private static AudioClip coinSound;
     private static AudioClip victorySound;
     private static AudioClip menuClickSound;
     private static AudioClip startSound;
+    private static AudioClip oceanAmbienceClip;
+    private static AudioClip jumpSound;
+    private static AudioClip landSound;
 
     // Texturas procedurais da UI (geradas em runtime para acabamento moderno arredondado)
     private static Texture2D texPanelNavy;
@@ -86,13 +90,27 @@ public class IslandGameManager : MonoBehaviour
         }
         Instance = this;
 
-        // Cria o emissor de áudio se não existir
+        // Cria o emissor de áudio principal para efeitos se não existir
         audioSource = gameObject.GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.playOnAwake = false;
         }
+
+        // Emissor dedicado para o áudio ambiente contínuo do mar/brisa
+        AudioSource[] allSources = gameObject.GetComponents<AudioSource>();
+        if (allSources.Length > 1)
+        {
+            ambientAudioSource = allSources[1];
+        }
+        else
+        {
+            ambientAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+        ambientAudioSource.playOnAwake = false;
+        ambientAudioSource.loop = true;
+        ambientAudioSource.volume = 0.28f;
 
         // Gera sons procedurais sintetizados matematicamente
         GenerateProceduralAudio();
@@ -103,6 +121,13 @@ public class IslandGameManager : MonoBehaviour
 
     void Start()
     {
+        // Inicia o som de mar contínuo relaxante
+        if (ambientAudioSource != null && oceanAmbienceClip != null && !ambientAudioSource.isPlaying)
+        {
+            ambientAudioSource.clip = oceanAmbienceClip;
+            ambientAudioSource.Play();
+        }
+
         // Se foi clicado em "Jogar Novamente", inicia direto no gameplay!
         if (restartDirectlyToGame)
         {
@@ -129,39 +154,48 @@ public class IslandGameManager : MonoBehaviour
 
     void Update()
     {
+        // Tratamento global de modais (fechar com ESC, Espaço ou Enter)
+        if (showControlsModal)
+        {
+            if (WasPauseHotkeyPressed() || WasStartHotkeyPressed())
+            {
+                showControlsModal = false;
+                PlayMenuClickSound();
+                return;
+            }
+        }
+        else if (showExitConfirmModal)
+        {
+            if (WasPauseHotkeyPressed())
+            {
+                showExitConfirmModal = false;
+                PlayMenuClickSound();
+                return;
+            }
+        }
+
         // Fading suave da interface do menu
         if (currentState == GameState.MainMenu)
         {
             menuAlpha = Mathf.MoveTowards(menuAlpha, 1f, Time.deltaTime * 3.5f);
 
             // Atalho para iniciar (Espaço / Enter / Gamepad A) quando nenhum modal estiver ativo
-            if (!showControlsModal && !showExitConfirmModal && WasStartHotkeyPressed())
+            if (WasStartHotkeyPressed())
             {
                 StartExpedition();
             }
-
-            // Tecla ESC no Menu Principal
-            if (WasPauseHotkeyPressed())
+            else if (WasPauseHotkeyPressed())
             {
-                if (showControlsModal)
-                {
-                    showControlsModal = false;
-                    PlayMenuClickSound();
-                }
-                else
-                {
-                    showExitConfirmModal = !showExitConfirmModal;
-                    PlayMenuClickSound();
-                }
+                showExitConfirmModal = true;
+                PlayMenuClickSound();
             }
         }
         else if (currentState == GameState.Transitioning)
         {
             menuAlpha = Mathf.MoveTowards(menuAlpha, 0f, Time.deltaTime * 2.2f);
         }
-
         // Cronômetro apenas durante o gameplay ativo
-        if (currentState == GameState.Playing)
+        else if (currentState == GameState.Playing)
         {
             gameTimer += Time.deltaTime;
 
@@ -176,21 +210,8 @@ public class IslandGameManager : MonoBehaviour
         {
             if (WasPauseHotkeyPressed())
             {
-                if (showControlsModal)
-                {
-                    showControlsModal = false;
-                    PlayMenuClickSound();
-                }
-                else if (showExitConfirmModal)
-                {
-                    showExitConfirmModal = false;
-                    PlayMenuClickSound();
-                }
-                else
-                {
-                    currentState = GameState.Playing;
-                    PlayMenuClickSound();
-                }
+                currentState = GameState.Playing;
+                PlayMenuClickSound();
             }
         }
     }
@@ -363,6 +384,22 @@ public class IslandGameManager : MonoBehaviour
         }
     }
 
+    public static void PlayJumpSound()
+    {
+        if (audioSource != null && jumpSound != null)
+        {
+            audioSource.PlayOneShot(jumpSound, 0.45f);
+        }
+    }
+
+    public static void PlayLandSound()
+    {
+        if (audioSource != null && landSound != null)
+        {
+            audioSource.PlayOneShot(landSound, 0.35f);
+        }
+    }
+
     private void GenerateProceduralAudio()
     {
         int sampleRate = 44100;
@@ -423,6 +460,80 @@ public class IslandGameManager : MonoBehaviour
         }
         startSound = AudioClip.Create("StartExpedition", startSamples, 1, sampleRate, false);
         startSound.SetData(startData, 0);
+
+        // 5. Áudio Ambiente Contínuo de Ondas do Mar & Brisa (Loop perfeito de 8 segundos)
+        int oceanDurationSec = 8;
+        int oceanSamples = sampleRate * oceanDurationSec;
+        float[] oceanData = new float[oceanSamples];
+        System.Random rng = new System.Random(42);
+
+        float filterState = 0f;
+        for (int i = 0; i < oceanSamples; i++)
+        {
+            float t = (float)i / sampleRate;
+
+            // Dois ciclos de marés harmônicos com período de 8s e 4s (garante continuidade matemática no loop)
+            float swell1 = (Mathf.Sin(2f * Mathf.PI * (t / 4.0f) - Mathf.PI * 0.5f) + 1f) * 0.5f;
+            float swell2 = (Mathf.Sin(2f * Mathf.PI * (t / 8.0f) + Mathf.PI * 0.25f) + 1f) * 0.5f;
+            float swell = swell1 * 0.7f + swell2 * 0.3f;
+
+            // Filtro IIR passa-baixas modulando frequência de corte suave (espuma e quebra das ondas)
+            float cutoff = Mathf.Lerp(160f, 680f, swell);
+            float rc = 1f / (2f * Mathf.PI * cutoff);
+            float dt = 1f / sampleRate;
+            float alpha = dt / (rc + dt);
+
+            float whiteNoise = (float)(rng.NextDouble() * 2.0 - 1.0);
+            filterState += alpha * (whiteNoise - filterState);
+
+            // Brisa marinha suave de baixa frequência
+            float breeze = Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.035f * swell;
+
+            oceanData[i] = (filterState * 0.30f * (0.35f + 0.65f * swell)) + breeze;
+        }
+
+        // Cross-fade suave de 0.5s nas extremidades para eliminar estalos no looping
+        int crossfadeSamples = (int)(sampleRate * 0.5f);
+        for (int i = 0; i < crossfadeSamples; i++)
+        {
+            float blend = (float)i / crossfadeSamples;
+            int tailIdx = oceanSamples - crossfadeSamples + i;
+            float mixed = Mathf.Lerp(oceanData[tailIdx], oceanData[i], blend);
+            oceanData[i] = mixed;
+            oceanData[tailIdx] = mixed;
+        }
+
+        oceanAmbienceClip = AudioClip.Create("OceanWavesAmbience", oceanSamples, 1, sampleRate, false);
+        oceanAmbienceClip.SetData(oceanData, 0);
+
+        // 6. Som de Pulo Fofo (Whoosh ascendente de ~0.14s)
+        int jumpSamples = (int)(sampleRate * 0.14f);
+        float[] jumpData = new float[jumpSamples];
+        for (int i = 0; i < jumpSamples; i++)
+        {
+            float t = (float)i / sampleRate;
+            float progress = (float)i / jumpSamples;
+            float freq = Mathf.Lerp(280f, 540f, progress);
+            float envelope = Mathf.Sin(progress * Mathf.PI) * (1f - progress * 0.4f);
+            jumpData[i] = Mathf.Sin(2f * Mathf.PI * freq * t) * envelope * 0.32f;
+        }
+        jumpSound = AudioClip.Create("PlayerJump", jumpSamples, 1, sampleRate, false);
+        jumpSound.SetData(jumpData, 0);
+
+        // 7. Som de Aterrissagem Suave na Areia (~0.09s)
+        int landSamples = (int)(sampleRate * 0.09f);
+        float[] landData = new float[landSamples];
+        for (int i = 0; i < landSamples; i++)
+        {
+            float t = (float)i / sampleRate;
+            float progress = (float)i / landSamples;
+            float freq = Mathf.Lerp(130f, 65f, progress);
+            float envelope = Mathf.Exp(-progress * 5.5f);
+            float sandCrunch = ((float)(rng.NextDouble() * 2.0 - 1.0)) * 0.12f * envelope;
+            landData[i] = (Mathf.Sin(2f * Mathf.PI * freq * t) * 0.22f + sandCrunch) * envelope;
+        }
+        landSound = AudioClip.Create("PlayerLand", landSamples, 1, sampleRate, false);
+        landSound.SetData(landData, 0);
     }
 
     // ==========================================
@@ -622,13 +733,17 @@ public class IslandGameManager : MonoBehaviour
     {
         InitializeStyles();
 
+        bool hasModal = showControlsModal || showExitConfirmModal;
+
         // 1. MENU INICIAL (com efeito suave de fade in/out)
         if (menuAlpha > 0.005f && (currentState == GameState.MainMenu || currentState == GameState.Transitioning))
         {
             Color oldGuiColor = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, menuAlpha);
 
+            GUI.enabled = !hasModal;
             DrawMainMenu();
+            GUI.enabled = true;
 
             GUI.color = oldGuiColor;
         }
@@ -642,13 +757,35 @@ public class IslandGameManager : MonoBehaviour
         // 3. MENU DE PAUSA & OPÇÕES (acionado ao apertar ESC durante o jogo)
         if (currentState == GameState.Paused)
         {
+            GUI.enabled = !hasModal;
             DrawPauseMenu();
+            GUI.enabled = true;
         }
 
         // 4. TELA DE VITÓRIA
         if (currentState == GameState.Victory)
         {
+            GUI.enabled = !hasModal;
             DrawVictoryPanel();
+            GUI.enabled = true;
+        }
+
+        // 5. MODAIS GLOBAIS (desenhados por último, por cima de tudo)
+        if (showControlsModal)
+        {
+            GUI.enabled = true;
+            int oldDepth = GUI.depth;
+            GUI.depth = -100;
+            DrawControlsModal();
+            GUI.depth = oldDepth;
+        }
+        else if (showExitConfirmModal)
+        {
+            GUI.enabled = true;
+            int oldDepth = GUI.depth;
+            GUI.depth = -100;
+            DrawExitConfirmModal();
+            GUI.depth = oldDepth;
         }
     }
 
@@ -717,16 +854,6 @@ public class IslandGameManager : MonoBehaviour
 
         // Créditos com o nome do criador
         GUI.Label(new Rect(cardX, startY + 255, cardW, 24), "Tiny Island v1.1 - Feito por Edu Braga", styleCredits);
-
-        // MODAIS
-        if (showControlsModal)
-        {
-            DrawControlsModal();
-        }
-        else if (showExitConfirmModal)
-        {
-            DrawExitConfirmModal();
-        }
     }
 
     private void DrawControlsModal()
@@ -734,47 +861,58 @@ public class IslandGameManager : MonoBehaviour
         float screenW = Screen.width;
         float screenH = Screen.height;
 
-        float modalW = 480f;
-        float modalH = 330f;
+        float modalW = 500f;
+        float modalH = 360f;
         float modalX = (screenW - modalW) * 0.5f;
         float modalY = (screenH - modalH) * 0.5f;
+        Rect modalRect = new Rect(modalX, modalY, modalW, modalH);
 
-        GUI.Box(new Rect(modalX, modalY, modalW, modalH), "", stylePanelModal);
+        // Fundo escuro que bloqueia cliques na interface de trás
+        Color prevColor = GUI.color;
+        GUI.color = new Color(0.02f, 0.05f, 0.08f, 0.75f);
+        GUI.DrawTexture(new Rect(0, 0, screenW, screenH), Texture2D.whiteTexture);
+        GUI.color = prevColor;
+
+        // Se o jogador clicar fora do card modal no fundo escuro, fecha suavemente
+        Event e = Event.current;
+        if (e != null && e.type == EventType.MouseDown && !modalRect.Contains(e.mousePosition))
+        {
+            showControlsModal = false;
+            PlayMenuClickSound();
+            e.Use();
+            return;
+        }
+
+        GUI.Box(modalRect, "", stylePanelModal);
 
         // Cabeçalho do Modal
-        GUIStyle modalHeader = new GUIStyle(styleTitle)
-        {
-            fontSize = 22
-        };
+        GUIStyle modalHeader = new GUIStyle(styleTitle) { fontSize = 24 };
         modalHeader.normal.textColor = new Color(1f, 0.88f, 0.35f);
-        GUI.Label(new Rect(modalX, modalY + 20, modalW, 30), "GUIA DO EXPLORADOR", modalHeader);
+        GUI.Label(new Rect(modalX, modalY + 22, modalW, 32), "GUIA DO EXPLORADOR", modalHeader);
 
         // Texto do Objetivo
-        GUIStyle bodyBold = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 14,
-            fontStyle = FontStyle.Bold
-        };
+        GUIStyle bodyBold = new GUIStyle(GUI.skin.label) { fontSize = 14, fontStyle = FontStyle.Bold };
         bodyBold.normal.textColor = new Color(1f, 0.84f, 0.2f);
 
-        GUIStyle bodyNormal = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 13,
-            wordWrap = true
-        };
+        GUIStyle bodyNormal = new GUIStyle(GUI.skin.label) { fontSize = 13, wordWrap = true };
         bodyNormal.normal.textColor = Color.white;
 
-        GUI.Label(new Rect(modalX + 30, modalY + 65, modalW - 60, 22), "OBJETIVO:", bodyBold);
-        GUI.Label(new Rect(modalX + 30, modalY + 88, modalW - 60, 42),
+        GUI.Label(new Rect(modalX + 35, modalY + 68, modalW - 70, 22), "OBJETIVO:", bodyBold);
+        GUI.Label(new Rect(modalX + 35, modalY + 92, modalW - 70, 48),
             $"Explore o arquipélago (Farol, Píer, Veleiro, Ponte, Acampamento, Recife e Ruínas) para encontrar as {targetCoins} moedas de ouro e abrir o Baú do Tesouro!", bodyNormal);
 
         // Controles
-        GUI.Label(new Rect(modalX + 30, modalY + 140, modalW - 60, 22), "CONTROLES:", bodyBold);
-        GUI.Label(new Rect(modalX + 30, modalY + 162, modalW - 60, 62),
+        GUI.Label(new Rect(modalX + 35, modalY + 148, modalW - 70, 22), "CONTROLES:", bodyBold);
+        GUI.Label(new Rect(modalX + 35, modalY + 172, modalW - 70, 68),
             "- W, A, S, D ou Setas / Left Stick: Caminhar pela ilha\n- ESPAÇO / Botão A: Pular nas pedras, barco e colinas\n- Sem estresse: Cair no mar não dá dano - você volta são e salvo!", bodyNormal);
 
         // Botão Fechar Modal
-        if (GUI.Button(new Rect(modalX + (modalW - 180) * 0.5f, modalY + modalH - 58, 180, 40), "Entendido", styleBtnGold))
+        float btnW = 200f;
+        float btnH = 44f;
+        float btnX = modalX + (modalW - btnW) * 0.5f;
+        float btnY = modalY + modalH - 64f;
+
+        if (GUI.Button(new Rect(btnX, btnY, btnW, btnH), "Entendido", styleBtnGold))
         {
             PlayMenuClickSound();
             showControlsModal = false;
@@ -790,8 +928,23 @@ public class IslandGameManager : MonoBehaviour
         float modalH = 205f;
         float modalX = (screenW - modalW) * 0.5f;
         float modalY = (screenH - modalH) * 0.5f;
+        Rect modalRect = new Rect(modalX, modalY, modalW, modalH);
 
-        GUI.Box(new Rect(modalX, modalY, modalW, modalH), "", stylePanelModal);
+        Color prevColor = GUI.color;
+        GUI.color = new Color(0.02f, 0.05f, 0.08f, 0.75f);
+        GUI.DrawTexture(new Rect(0, 0, screenW, screenH), Texture2D.whiteTexture);
+        GUI.color = prevColor;
+
+        Event e = Event.current;
+        if (e != null && e.type == EventType.MouseDown && !modalRect.Contains(e.mousePosition))
+        {
+            showExitConfirmModal = false;
+            PlayMenuClickSound();
+            e.Use();
+            return;
+        }
+
+        GUI.Box(modalRect, "", stylePanelModal);
 
         GUIStyle exitHeader = new GUIStyle(styleTitle) { fontSize = 22 };
         exitHeader.normal.textColor = new Color(1f, 0.84f, 0.35f);
@@ -928,16 +1081,6 @@ public class IslandGameManager : MonoBehaviour
 
         // Dica
         GUI.Label(new Rect(panelX, startY + 272, panelW, 20), "Pressione [ESC] para retornar ao jogo", styleHint);
-
-        // Modais sobre o menu de pausa
-        if (showControlsModal)
-        {
-            DrawControlsModal();
-        }
-        else if (showExitConfirmModal)
-        {
-            DrawExitConfirmModal();
-        }
     }
 
     private void DrawVictoryPanel()
